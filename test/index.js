@@ -1,215 +1,270 @@
-var assert        = require("assert"),
-    sinon         = require("sinon"),
-    iter          = require("../index"),
-    exhaust       = iter.exhaust,
-    forEach       = iter.forEach,
-    map           = iter.map,
-    filter        = iter.filter,
-    StopIteration = iter.StopIteration,
-    fakes;
+var assert  = require("assert"),
+    sinon   = require("sinon"),
+    async   = require("../index"),
+    when    = async.when,
+    Promise = async.Promise,
+    fakes, promise;
 
 
-describe("test iter module: ", function() {
+describe("test async module: ", function() {
 
 
   beforeEach(function() {
 
     fakes = sinon.sandbox.create();
+    promise = Promise.spawn();
 
   });
 
   afterEach(function() {
 
     fakes.restore();
-
-  });
-
-  describe("function exhaust", function() {
-
-    it("should iterate over an array", function() {
-
-      var spy = sinon.spy();
-      exhaust([10, 20, 30, 40, 50], spy);
-
-      assert.equal(5, spy.callCount);
-
-      assert.equal(10, spy.args[0][0]);
-      assert.equal(0, spy.args[0][1]);
-      assert.equal(20, spy.args[1][0]);
-      assert.equal(1, spy.args[1][1]);
-      assert.equal(30, spy.args[2][0]);
-      assert.equal(2, spy.args[2][1]);
-      assert.equal(40, spy.args[3][0]);
-      assert.equal(3, spy.args[3][1]);
-      assert.equal(50, spy.args[4][0]);
-      assert.equal(4, spy.args[4][1]);
-
-    });
-
-
-    it("should iterate over an object", function() {
-
-      var spy = sinon.spy();
-      exhaust({
-        ten: 10,
-        twenty: 20,
-        thirty: 30,
-        forty: 40,
-        fifty: 50
-      }, spy);
-
-      assert.equal(5, spy.callCount);
-
-      assert.equal(10, spy.args[0][0]);
-      assert.equal("ten", spy.args[0][1]);
-      assert.equal(20, spy.args[1][0]);
-      assert.equal("twenty", spy.args[1][1]);
-      assert.equal(30, spy.args[2][0]);
-      assert.equal("thirty", spy.args[2][1]);
-      assert.equal(40, spy.args[3][0]);
-      assert.equal("forty", spy.args[3][1]);
-      assert.equal(50, spy.args[4][0]);
-      assert.equal("fifty", spy.args[4][1]);
-
-    });
-
-
-    it("should iterate over an object with a next() method", function() {
-
-      var spy = sinon.spy();
-      exhaust({
-        ten: 10,
-        twenty: 20,
-        thirty: 30,
-        forty: 40,
-        fifty: 50,
-        keys: ["ten", "twenty", "thirty", "fifty"],
-        next: function () {
-          var key = this.keys.shift();
-          if (this[key]) return [this[key], key];
-          throw StopIteration;
-        }
-      }, spy);
-
-      assert.equal(4, spy.callCount);
-
-      assert.equal(10, spy.args[0][0]);
-      assert.equal("ten", spy.args[0][1]);
-      assert.equal(20, spy.args[1][0]);
-      assert.equal("twenty", spy.args[1][1]);
-      assert.equal(30, spy.args[2][0]);
-      assert.equal("thirty", spy.args[2][1]);
-      assert.equal(50, spy.args[3][0]);
-      assert.equal("fifty", spy.args[3][1]);
-
-    });
+    promise = null;
 
   });
 
 
-  describe("function forEach", function() {
+  describe("object Promise", function() {
 
-    it("should delegate to Array.prototype.forEach", function() {
+    it("should have 4 possible states", function() {
 
-      var spy = sinon.spy(),
-          fforEach = fakes.spy(Array.prototype, "forEach");
-      forEach([0, 1, 2, 3, 4], spy);
-
-      assert.equal(1, fforEach.callCount);
-      assert.equal(5, spy.callCount);
+      assert.equal(-1, Promise.STATUS_PENDING);
+      assert.equal(0, Promise.STATUS_RESOLVED);
+      assert.equal(1, Promise.STATUS_REJECTED);
+      assert.equal(2, Promise.STATUS_CANCELLED);
 
     });
+
+
+    it("should have state -1 on creation", function() {
+
+      assert.equal(-1, promise.status);
+
+    });
+
+    it("should have state 0 if resolved", function() {
+
+      promise.resolve();
+      assert.equal(0, promise.status);
+
+    });
+
+    it("should have state 1 if rejected", function() {
+
+      promise.reject();
+      assert.equal(1, promise.status);
+
+    });
+
+    it("should have state 2 if cancelled", function() {
+
+      promise.cancel();
+      assert.equal(2, promise.status);
+
+    });
+
+    it("should register callbacks or false", function() {
+
+      promise.then(false, sinon.spy());
+      promise.then(sinon.spy(), false);
+      promise.then(sinon.spy(), sinon.spy());
+      promise.then(false, false);
+
+      assert.equal(4, promise.deferreds.length);
+
+      assert.equal("boolean", typeof promise.deferreds[0][0]);
+      assert.equal("function", typeof promise.deferreds[0][1]);
+      assert.equal("function", typeof promise.deferreds[1][0]);
+      assert.equal("boolean", typeof promise.deferreds[1][1]);
+      assert.equal("function", typeof promise.deferreds[2][0]);
+      assert.equal("function", typeof promise.deferreds[2][1]);
+      assert.equal("boolean", typeof promise.deferreds[3][0]);
+      assert.equal("boolean", typeof promise.deferreds[3][1]);
+
+    });
+
+
+    it("should throw an error for all other callback types", function() {
+
+
+      assert.throws(function() {
+        promise.then({}, false);
+      });
+
+      assert.throws(function() {
+        promise.then(false, {});
+      });
+
+
+    });
+
+
+    it("should immediately resolve if created with an initial value", function() {
+
+      var r = 0,
+          p = Promise.spawn(10);
+
+      assert.equal(0, r);
+      assert.equal(0, p.status);
+
+      p.then(function(v) {
+        r = v;
+      });
+
+      assert.equal(10, r);
+
+    });
+
+
+    it("should resolve any success callbacks with a given value", function() {
+
+      var success = sinon.spy(),
+          fail = sinon.spy();
+
+      promise.then(success, fail);
+      promise.then(success, fail);
+
+      promise.resolve("test");
+
+      assert.equal(2, success.callCount);
+      assert.equal("test", success.args[0][0]);
+      assert.equal("test", success.args[1][0]);
+
+      assert.equal(0, fail.callCount);
+
+      promise.then(success, fail);
+      promise.then(success, fail);
+
+      assert.equal(4, success.callCount);
+      assert.equal("test", success.args[0][0]);
+      assert.equal("test", success.args[1][0]);
+
+      assert.equal(0, fail.callCount);
+
+    });
+
+    it("should reject any fail callbacks with a given value", function() {
+
+      var success = sinon.spy(),
+          fail = sinon.spy();
+
+      promise.then(success, fail);
+      promise.then(success, fail);
+
+      promise.reject("test");
+
+      assert.equal(2, fail.callCount);
+      assert.equal("test", fail.args[0][0]);
+      assert.equal("test", fail.args[1][0]);
+
+      assert.equal(0, success.callCount);
+
+      promise.then(success, fail);
+      promise.then(success, fail);
+
+      promise.reject("test");
+
+      assert.equal(4, fail.callCount);
+      assert.equal("test", fail.args[0][0]);
+      assert.equal("test", fail.args[1][0]);
+
+      assert.equal(0, success.callCount);
+
+    });
+
+
+    it("should not resolve if cancelled", function() {
+
+      var success = sinon.spy(),
+          fail = sinon.spy();
+
+      promise.then(success, fail);
+      promise.then(success, fail);
+
+      promise.cancel();
+      promise.resolve();
+
+      assert.equal(0, success.callCount);
+
+      promise.then(success, fail);
+      promise.then(success, fail);
+
+      assert.equal(0, success.callCount);
+
+
+    });
+
+    it("should not reject if cancelled", function() {
+
+      var success = sinon.spy(),
+          fail = sinon.spy();
+
+      promise.then(success, fail);
+      promise.then(success, fail);
+
+      promise.cancel();
+      promise.reject();
+
+      assert.equal(0, fail.callCount);
+
+      promise.then(success, fail);
+      promise.then(success, fail);
+
+      assert.equal(0, fail.callCount);
+
+    });
+
+
+    it("if resolved with a promise it should defer resolution until the promise resolves", function(done) {
+
+      var success = sinon.spy(),
+          p = Promise.spawn();
+
+      promise.then(success);
+      promise.then(success);
+
+      promise.resolve(p);
+
+      assert.equal(0, success.callCount);
+
+
+      setTimeout(function() {
+
+        p.resolve();
+
+        assert.equal(2, success.callCount);
+
+        done();
+
+      }, 20);
+
+    });
+
+
+
 
   });
 
 
-  describe("function filter", function() {
 
-    it("should delegate to Array.prototype.filter", function() {
+  describe("function when", function() {
 
-      var ffilter = fakes.spy(Array.prototype, "filter"),
-          results;
+    it("should return a new resolved Promise if passed a non promise value", function() {
 
-      results = filter([0, 1, 2, 3, 4], function(value) {
-        return value < 3;
-      });
-
-      assert.equal(1, ffilter.callCount);
-      assert.equal(3, results.length);
-      assert.equal(0, results[0]);
-      assert.equal(1, results[1]);
-      assert.equal(2, results[2]);
+      assert.equal(true, Promise.isPrototypeOf(when(10)));
+      assert.equal(0, when(10).status);
 
     });
 
-    it("should filter using filter", function() {
+    it("should return it's param if passed a Promise", function() {
 
-      var results;
+      var p = Promise.spawn(50);
 
-      results = filter({
-        ten: 10,
-        twenty: 20,
-        thirty: 30,
-        forty: 40,
-        fifty: 50
-      }, function(value) {
-        return value < 30;
-      });
-
-      assert.equal(10, results.ten);
-      assert.equal(20, results.twenty);
-      assert.equal(undefined, results.thirty);
-      assert.equal(undefined, results.forty);
-      assert.equal(undefined, results.fifty);
+      assert.notEqual(p, when(Promise.spawn()));
+      assert.equal(p, when(p));
 
     });
 
-  });
-
-
-
-  describe("function map", function() {
-
-    it("should delegate to Array.prototype.map", function() {
-
-      var fmap = fakes.spy(Array.prototype, "map"),
-          results;
-
-      results = map([0, 1, 2, 3, 4], function(value) {
-        return value * 2;
-      });
-
-      assert.equal(1, fmap.callCount);
-      assert.equal(5, results.length);
-      assert.equal(0, results[0]);
-      assert.equal(2, results[1]);
-      assert.equal(4, results[2]);
-      assert.equal(6, results[3]);
-      assert.equal(8, results[4]);
-
-    });
-
-    it("should map using map", function() {
-
-      var results;
-
-      results = map({
-        ten: 10,
-        twenty: 20,
-        thirty: 30,
-        forty: 40,
-        fifty: 50
-      }, function(value) {
-        return value * 10;
-      });
-
-      assert.equal(100, results.ten);
-      assert.equal(200, results.twenty);
-      assert.equal(300, results.thirty);
-      assert.equal(400, results.forty);
-      assert.equal(500, results.fifty);
-
-    });
 
   });
 

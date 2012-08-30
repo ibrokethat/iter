@@ -1,17 +1,17 @@
-# ibt-Object
+# ibt-async
 
-Simple Object extensions for ES5
+Promises
 
-## Instal
+## Install
 
-       npm install ibt-Object
-
-
-##  What is ibt-Object?
+       npm install ibt-async
 
 
+##  What is ibt-async?
 
-##  Using ibt_Object
+
+
+##  Using ibt-async
 
 
 ## License

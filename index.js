@@ -1,444 +1,137 @@
 /**
-  @module   iteration methods
+  @description  iteration
 */
 require("ibt-Object");
 
-var StopIteration = Error.spawn();
-
+var is      = require("ibt-is"),
+    func    = require("ibt-func"),
+    enforce = is.enforce,
+    typeOf  = is.typeOf,
+    partial = func.partial,
+    bind    = func.bind,
+    Promise;
 
 /**
-  @description  creates an iterable object from another object
-  @param        {object} obect
-  @return       {iterable}
+  @description  a lightweight promise implementation
 */
-function iterator(object){
+Promise = {
 
-  var it = false, i, keys;
 
-  if (typeof object.next ==='function') {
-    it = object;
-  }
-  else if (typeof object.__iter__ === "function") {
+  STATUS_PENDING: -1,
+  STATUS_RESOLVED: 0,
+  STATUS_REJECTED: 1,
+  STATUS_CANCELLED: 2,
 
-    it = object.__iter__();
 
-  }
-  else if(object.length) {
+  __init__: function(value) {
 
-    i = 0;
-    it = {
-      next: function() {
-        if (typeof object[i] !== 'undefined') {
-          return [object[i], i++];
-        }
-        throw StopIteration;
+    this.deferreds = [];
+    this.status = this.STATUS_PENDING;
+
+    if (!typeOf("undefined", value)) {
+      this.resolve(value);
+    }
+
+  },
+
+
+  /**
+    @description  cancels the promise
+  */
+  cancel: function () {
+
+    this.status = this.STATUS_CANCELLED;
+
+  },
+
+
+  /**
+    @description  registers callback functions for both resolutions and rejection
+    @param        {function} resolve
+    @param        {function} reject
+    @return       {this}
+  */
+  then: function (resolve, reject) {
+
+    if (resolve) enforce("function", resolve);
+    if (reject) enforce("function", reject);
+
+    this.deferreds.push([resolve, reject]);
+
+    if (this.status !== this.STATUS_PENDING) {
+      this._exhaust(this.status, this.result);
+    }
+
+    return this;
+
+  },
+
+
+  /**
+    @description  fires all the callbacks
+    @param        {number} status
+    @param        {any} result
+  */
+  _exhaust: function (status, result) {
+
+    var callback;
+
+    if (this.status === this.STATUS_CANCELLED) return;
+
+    if (typeOf(Promise, result)) {
+      result.then(
+        bind(this, this.resolve),
+        bind(this, this.reject)
+      );
+      return;
+    }
+
+    while (this.deferreds.length) {
+
+      callback = this.deferreds.shift()[status];
+
+      if (typeof callback === "function") {
+
+        callback(result);
+
       }
-    };
 
-  }
-  else {
-
-    try {
-
-      keys = Object.keys(object);
-      i = 0;
-
-      it = {
-        next: function() {
-          if (typeof keys[i] !== 'undefined') {
-            return [object[keys[i]], keys[i++]];
-          }
-          throw StopIteration;
-        }
-      };
-    }
-    catch(e) {
-      it = false;
     }
 
+    this.status = status;
+    this.result = result;
 
   }
 
-  return it;
-}
+};
+
+/**
+  @description  resolve the promise
+  @param        {any} result
+*/
+Promise.resolve = bind(Promise._exhaust, Promise.STATUS_RESOLVED);
+
+
+/**
+  @description  reject the promise
+  @param        {any} result
+*/
+Promise.reject = bind(Promise._exhaust, Promise.STATUS_REJECTED);
 
 
 
 
 /**
-  @descrption   applies a function to each item in an object
-                after selecting most appropriate method to perform the iteration
-  @param        {object} object
-  @param        {func} function
+  @description  wraps a value in a promise unless it already is one
+  @param        {any} promise or value
+  @return       {Promise}
 */
-function exhaust(object, func) {
+function when(value) {
 
-  var i, l, r, key, keys;
-
-  try {
-    if (typeof object.length === 'number') {
-      for (i = 0, l = object.length; i < l; i++) {
-        func(object[i], i);
-      }
-    }
-    else {
-      if (typeof object.__iter__ === "function") {
-        object = object.__iter__();
-      }
-      if (typeof object.next === "function") {
-        i = 0;
-        while (true) {
-          r = object.next();
-          func(r[0], r[1]);
-        }
-      }
-      else if (Object.keys && Array.prototype.forEach) {
-        Object.keys(object).forEach(function(key) {
-          func(object[key], key);
-        });
-      }
-      else {
-        for (key in object) {
-          func(object[key], key);
-        }
-      }
-    }
-  }
-  catch (e) {
-    if (e !== StopIteration) {
-      throw e;
-    }
-
-  }
-}
-
-
-
-/**
-  @descrption   calls a function on each item in an object
-  @param        {o} object
-  @param        {func} function
-  @param        {object} [scope]
-*/
-function forEach(o, func, scope) {
-  if(typeof o.forEach === 'function') {
-    o.forEach(func, scope);
-  }
-  else {
-    exhaust(o, function(value, key){
-      func.call(scope, value, key);
-    });
-  }
-}
-
-
-/**
-  @descrption   calls a function on each item in an object and returns the item if 'true'
-  @param        {o} object
-  @param        {func} function
-  @param        {object} [scope]
-*/
-function filter(o, func, scope) {
-  if(typeof o.filter === 'function') {
-    return o.filter(func, scope);
-  }
-  var ret = o.length ? [] : {};
-  exhaust(o, function(value, key){
-    if (func.call(scope, value, key)) {
-      if(o.length) {
-        ret.push(value);
-      }
-      else {
-        ret[key] = value;
-      }
-    }
-  });
-  return ret;
-}
-
-
-/**
-  @descrption   calls a function on each item in an object and returns the result
-  @param        {o} object
-  @param        {func} function
-  @param        {object} [scope]
-  @return       {object|array}
-*/
-function map(o, func, scope) {
-  if(typeof o.map === 'function') {
-    return o.map(func, scope);
-  }
-  var ret = o.length ? [] : {};
-  exhaust(o, function(value, key){
-    var r = func.call(scope, value, key);
-    if(o.length) {
-      ret.push(r);
-    }
-    else {
-      ret[key] = r;
-    }
-  });
-  return ret;
-}
-
-
-
-
-/**
-  @description  returns true if any of the items evaluate to true
-                else returns false
-  @param        {o} object
-  @param        {func} function
-  @param        {object} [scope]
-  @return       {boolean}
-*/
-function some(o, func, scope) {
-  if(typeof o.some === 'function') {
-    return o.some(func, scope);
-  }
-  var ret = false;
-  exhaust(o, function(value, key){
-    if ((ret = func.call(scope, value, key))) {
-      throw StopIteration;
-    }
-  });
-  return ret;
-}
-
-
-
-/**
-  @description  returns true if all of the items evaluate to true
-                else returns false
-  @param        {o} object
-  @param        {func} function
-  @param        {object} [scope]
-  @return       {boolean}
-*/
-function every(o, func, scope) {
-  if(typeof o.every === 'function') {
-    return o.every(func, scope);
-  }
-  var ret = true;
-  exhaust(o, function(value, key){
-    if (!(ret = func.call(scope, value, key))) {
-      throw StopIteration;
-    }
-  });
-  return ret;
-}
-
-
-
-/**
-  @description  returns the index of the first match
-  @param        {o} object
-  @param        {any} val
-  @return       {int|string}
-*/
-function indexOf(o, val) {
-  if(typeof o.indexOf === 'function') {
-    return o.indexOf(val);
-  }
-  var ret = -1;
-  exhaust(o, function(value, key){
-    if (value === val) {
-      ret = key;
-      throw StopIteration;
-    }
-  });
-  return ret;
-}
-
-
-
-/**
-  @description  returns the index of the last match
-  @param        {o} object
-  @param        {any} val
-  @return       {int|string}
-*/
-function lastIndexOf(o, val){
-  if(typeof o.lastIndexOf === 'function') {
-    return o.lastIndexOf(val);
-  }
-  var ret = -1;
-  exhaust(o, function(value, key){
-    if (value === val) {
-      ret = key;
-    }
-  });
-  return ret;
-}
-
-
-/**
-  @description  converts an array like object to an array
-  @param        {object} arrayLike
-  @param        {number} [i]
-  @return       {array}
-*/
-function toArray(arrayLike, i) {
-
-  return Array.prototype.slice.call(arrayLike, i || 0);
+  return typeOf(Promise, value) ? value : Promise.spawn(value);
 
 }
 
 
-
-
-/**
-  @description  reduces the value of the object down to a single value
-  @param        {any} ret
-  @param        {object} o
-  @param        {function} func
-  @return       {any}
-*/
-function reduce(ret, o, func){
-
-  var iterable;
-
-  if(typeof o === "function" && typeof func === "undefined") {
-
-    iterable = iterator(ret);
-    func = o;
-    try {
-      ret = iterable.next();
-    }
-    catch (e) {
-      if (e === StopIteration) {
-        throw TypeError.spawn("reduce() of sequence with no initial value");
-      }
-      throw e;
-    }
-  }
-  else {
-    iterable = iterator(o);
-  }
-
-  exhaust(iterable, function(value, key){
-    ret = func(ret, value, key);
-  });
-  return ret;
-}
-
-
-
-/**
-  @description  adds the values of the object
-  @param        {object} o
-  @param        {any} [ret]
-  @return       {number}
-*/
-function sum(o, ret) {
-  return reduce(ret || 0, o, function(ret, a){
-    return (ret + a);
-  });
-}
-
-
-
-
-/**
-  @description  creates an iterable object that iterates over all it's parameter objects
-  @param        {array} args
-  @return       {iterable}
-*/
-function chain(args) {
-
-  if(args.length === 1) {
-    return iterator(args[0]);
-  }
-
-  var iterables = map(args, iterator);
-
-  return {
-
-    next: function() {
-
-      try {
-        return iterables[0].next();
-      }
-      catch(e) {
-        if (e !== StopIteration) {
-          throw e;
-        }
-        if(iterables.length === 1) {
-          throw StopIteration;
-        }
-        iterables.shift();
-        return iterables[0].next();
-      }
-    }
-
-  };
-}
-
-
-
-/**
-  @description  creates an iterator map
-  @param        {object} o
-  @param        {function} func
-  @param        {object} [scope]
-  @return       {iterable}
-*/
-function imap(o, func, scope){
-
-  var iterable = iterator(o);
-
-  return {
-
-    next: function () {
-      var it = iterable.next();
-      return [func.apply(scope || null, it[0]), it[1]];
-
-    }
-
-  };
-}
-
-
-
-/**
-  @description  creates a range iterable
-  @param        {number} start
-  @param        {number} stop
-  @param        {number} [step]
-  @return       {iterable}
-*/
-function range(start, stop, step) {
-
-  var i = 0;
-
-  step = step || 1;
-
-  return {
-    next: function() {
-      var ret = start;
-      if(start >= stop) {
-        throw StopIteration;
-      }
-      start = start + step;
-      return [ret, i++];
-    }
-  };
-}
-
-
-exports.StopIteration = StopIteration;
-exports.iterator      = iterator;
-exports.exhaust       = exhaust;
-exports.forEach       = forEach;
-exports.filter        = filter;
-exports.map           = map;
-exports.some          = some;
-exports.every         = every;
-exports.indexOf       = indexOf;
-exports.lastIndexOf   = lastIndexOf;
-exports.toArray       = toArray;
-exports.reduce        = reduce;
-exports.sum           = sum;
-exports.chain         = chain;
-exports.imap          = imap;
-exports.range         = range;
+exports.Promise = Promise;
+exports.when    = when;
