@@ -1,17 +1,17 @@
-# ibt-Object
+# ibt-iter
 
-Simple Object extensions for ES5
+Iteration: loosely based on pythons iter tools
 
-## Instal
+## Install
 
-       npm install ibt-Object
-
-
-##  What is ibt-Object?
+       npm install ibt-iter
 
 
+##  What is ibt-iter?
 
-##  Using ibt_Object
+
+
+##  Using ibt-iter
 
 
 ## License
@@ -34,3 +34,4 @@ LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE A
 IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
