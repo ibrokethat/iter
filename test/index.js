@@ -1,6 +1,6 @@
 var assert        = require("assert"),
     sinon         = require("sinon"),
-    iter          = require("ibt-iter"),
+    iter          = require("../index"),
     exhaust       = iter.exhaust,
     forEach       = iter.forEach,
     map           = iter.map,
