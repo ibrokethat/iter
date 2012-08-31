@@ -18,7 +18,7 @@
     "type": "git",
     "url": "git@github.com:ibrokethat/ibt-iter"
   },
-  "main": "index",
+  "main": "ibt-iter",
   "scripts": {
     "prepublish" : "npm prune",
     "test": "mocha -u bdd"
