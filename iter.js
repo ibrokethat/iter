@@ -1,7 +1,7 @@
 /**
   @module   iteration methods
 */
-require("ibt-Object");
+require("Object");
 
 var StopIteration = Error.spawn();
 

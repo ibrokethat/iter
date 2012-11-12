@@ -1,17 +1,17 @@
-# ibt-iter
+# iter
 
 Iteration: loosely based on pythons iter tools
 
 ## Install
 
-       npm install ibt-iter
+       npm install iter
 
 
-##  What is ibt-iter?
+##  What is iter?
 
 
 
-##  Using ibt-iter
+##  Using iter
 
 
 ## License

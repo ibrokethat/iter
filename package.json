@@ -1,5 +1,5 @@
 {
-  "name": "ibt-iter",
+  "name": "iter",
   "description": "ibrokethat iteration",
   "version": "0.0.1",
   "author": "si@ibrokethat.com",
@@ -7,7 +7,7 @@
     { "name": "Simon Jefford", "email": "si@ibrokethat.com" }
   ],
   "dependencies": {
-    "ibt-Object": "git+ssh://git@github.com:ibrokethat/ibt-Object"
+    "Object": "git+ssh://git@github.com:ibrokethat/Object"
   },
   "devDependencies": {
     "mocha": "1.2.x",
@@ -16,9 +16,9 @@
   "keywords": ["ibrokethat", "iter"],
   "repository": {
     "type": "git",
-    "url": "git@github.com:ibrokethat/ibt-iter"
+    "url": "git@github.com:ibrokethat/iter"
   },
-  "main": "ibt-iter",
+  "main": "iter",
   "scripts": {
     "prepublish" : "npm prune",
     "test": "mocha -u bdd"
