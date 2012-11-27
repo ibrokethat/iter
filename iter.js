@@ -13,7 +13,7 @@ var StopIteration = Error.spawn();
 */
 function iterator(object){
 
-  var it = false, i, keys;
+  var it = false;
 
   if (typeof object.next ==='function') {
     it = object;
@@ -25,7 +25,8 @@ function iterator(object){
   }
   else if(object.length) {
 
-    i = 0;
+    var i = 0;
+
     it = {
       next: function() {
         if (typeof object[i] !== 'undefined') {
@@ -40,8 +41,8 @@ function iterator(object){
 
     try {
 
-      keys = Object.keys(object);
-      i = 0;
+      var keys = Object.keys(object);
+      var i = 0;
 
       it = {
         next: function() {
@@ -73,11 +74,9 @@ function iterator(object){
 */
 function exhaust(object, func) {
 
-  var i, l, r, key, keys;
-
   try {
     if (typeof object.length === 'number') {
-      for (i = 0, l = object.length; i < l; i++) {
+      for (var i = 0, l = object.length; i < l; i++) {
         func(object[i], i);
       }
     }
@@ -86,7 +85,8 @@ function exhaust(object, func) {
         object = object.__iter__();
       }
       if (typeof object.next === "function") {
-        i = 0;
+        var i = 0;
+        var r;
         while (true) {
           r = object.next();
           func(r[0], r[1]);
@@ -98,7 +98,7 @@ function exhaust(object, func) {
         });
       }
       else {
-        for (key in object) {
+        for (var key in object) {
           func(object[key], key);
         }
       }
