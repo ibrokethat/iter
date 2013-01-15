@@ -18,7 +18,10 @@
     "type": "git",
     "url": "git@github.com:ibrokethat/iter"
   },
-  "main": "iter",
+  "ibrokethat": {
+    "buildClient": true
+  },
+  "main": "iter.js",
   "scripts": {
     "prepublish" : "npm prune",
     "test": "mocha -u bdd"
