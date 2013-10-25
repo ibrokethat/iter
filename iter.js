@@ -1,9 +1,8 @@
 /**
   @module   iteration methods
 */
-require("Object");
 
-var StopIteration = Error.spawn();
+var StopIteration = new Error();
 
 
 /**
