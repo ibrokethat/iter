@@ -288,25 +288,28 @@ function toArray(arrayLike, i) {
 
 /**
   @description  reduces the value of the object down to a single value
-  @param        {any} ret
+  @param        {any} acc
   @param        {object} o
   @param        {function} func
   @return       {any}
 */
-function reduce(ret, o, func){
+function reduce (o, func, acc, scope){
+
+  if(typeof o.reduce === 'function') {
+    return o.reduce(func.bind(scope || null), acc);
+  }
 
   var iterable;
 
-  if(typeof o === "function" && typeof func === "undefined") {
+  if (!acc) {
 
-    iterable = iterator(ret);
-    func = o;
+    iterable = iterator(o);
     try {
-      ret = iterable.next();
+      acc = iterable.next();
     }
     catch (e) {
       if (e === StopIteration) {
-        throw TypeError.spawn("reduce() of sequence with no initial value");
+        throw new TypeError("reduce() of sequence with no initial value");
       }
       throw e;
     }
@@ -316,9 +319,9 @@ function reduce(ret, o, func){
   }
 
   exhaust(iterable, function(value, key){
-    ret = func(ret, value, key);
+    acc = func.call(scope || null, acc, value, key);
   });
-  return ret;
+  return acc;
 }
 
 

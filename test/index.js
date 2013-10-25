@@ -1,10 +1,11 @@
-var assert        = require("assert"),
-    sinon         = require("sinon"),
-    iter          = require("../iter"),
-    exhaust       = iter.exhaust,
-    forEach       = iter.forEach,
-    map           = iter.map,
-    filter        = iter.filter,
+var assert = require("assert"),
+    sinon = require("sinon"),
+    iter = require("../iter"),
+    exhaust = iter.exhaust,
+    forEach = iter.forEach,
+    map = iter.map,
+    filter = iter.filter,
+    reduce = iter.reduce,
     StopIteration = iter.StopIteration,
     fakes;
 
@@ -211,6 +212,37 @@ describe("test iter module: ", function() {
 
     });
 
+  });
+
+
+
+  describe("function reduce", function() {
+
+    it("should an reduce an array to a value", function() {
+
+      var freduce = fakes.spy(Array.prototype, "reduce"),
+          results;
+
+      results = reduce([0, 1, 2, 3, 4], function(acc, value) {
+        return acc + value;
+      }, 10);
+
+      assert.equal(1, freduce.callCount);
+      assert.equal(20, results);
+
+    });
+
+     it("should an reduce an object to a value", function() {
+
+      var results;
+
+      results = reduce({a:0, b:1, c:2, d:3, e:4}, function(acc, value, key) {
+        return acc + value;
+      }, 10);
+
+      assert.equal(20, results);
+
+    });
   });
 
 
