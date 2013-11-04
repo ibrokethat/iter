@@ -324,6 +324,59 @@ function reduce (o, func, acc, scope){
   return acc;
 }
 
+/**
+  @description  invokes the passed method on a collection of Objects and returns an Array of the values returned by each Object
+  @param        {object} items
+  @param        {string} method
+  @param        {any} [arg1, arg2, ..., argN]
+  @return       {array}
+*/
+
+  function invoke( items, method ) {
+    var args  = Array.prototype.slice.call( arguments, 2 ),
+      i     = -1,
+      l     = Array.isArray( items ) ? items.length : 0,
+      res   = [];
+
+    while ( ++i < l )
+      res.push( items[i][method].apply( items[i], args ) );
+
+    return res;
+  }
+
+
+
+/**
+  @description  pluck values from a collection of Objects
+  @param        {object} items
+  @param        {string} key
+  @param        {boolean} [only_existing]
+  @return       {array}
+*/
+
+  function pluck( items, key, only_existing ) {
+    only_existing = only_existing === true;
+
+    var U,
+      i   = -1,
+      l   = Array.isArray( items ) ? items.length : 0,
+      res = [],
+      val;
+
+    if ( key.indexOf( '.' ) > -1 )
+      return reduce( key.split( '.' ), function( v, k ) {
+        return pluck( v, k, only_existing );
+      }, items );
+
+    while ( ++i < l ) {
+      val = key in Object( items[i] ) ? items[i][key] : U;
+
+      if ( only_existing !== true || ( val !== null && val !== U ) )
+        res.push( val );
+    }
+
+    return res;
+  }
 
 
 /**
@@ -333,9 +386,9 @@ function reduce (o, func, acc, scope){
   @return       {number}
 */
 function sum(o, ret) {
-  return reduce(ret || 0, o, function(ret, a){
+  return reduce( o, function(ret, a){
     return (ret + a);
-  });
+  }, ret || 0);
 }
 
 
@@ -444,4 +497,6 @@ exports.sum           = sum;
 exports.chain         = chain;
 exports.imap          = imap;
 exports.range         = range;
+exports.invoke        = invoke;
+exports.pluck         = pluck;
 

@@ -7,7 +7,8 @@ var assert = require("assert"),
     filter = iter.filter,
     reduce = iter.reduce,
     StopIteration = iter.StopIteration,
-    fakes;
+    fakes,
+    expect = require( 'chai' ).expect;
 
 
 describe("test iter module: ", function() {
@@ -246,5 +247,49 @@ describe("test iter module: ", function() {
   });
 
 
+  it( 'function invoke', function() {
+    expect( iter.invoke( [1, 2, 3, 4, 5], 'toFixed', 2 ) ).to.deep.equal( ['1.00', '2.00', '3.00', '4.00', '5.00'] );
+    expect( iter.invoke( [1, 2, 3, 4, 5, 6, 7], 'toString', 2 ) ).to.deep.equal( ['1', '10', '11', '100', '101', '110', '111'] );
+
+  } );
+
+
+  it( 'function pluck', function() {
+    var data = [{ data : { value : 'foo' } }, { data : { value : 'bar' } }, {}, { value : 'blim' }, { data : { value : 'blam' } }];
+    expect( iter.pluck( data, 'data.value' ) ).to.deep.equal( ["foo", "bar", undefined, undefined, "blam"] );
+
+    expect( iter.pluck( data, 'data.value', true ) ).to.deep.equal( ["foo", "bar", "blam"] );
+
+    expect( iter.pluck( [
+      { 'one' : 1, 'two' : 2, 'three' : 3 },
+      { 'one' : 1, 'two' : 2, 'three' : 3 },
+      { 'one' : 1, 'two' : 2, 'three' : 3 }
+    ], 'two' ) ).to.deep.equal( [2, 2, 2] );
+
+    expect( iter.pluck( [
+      { 'one' : 1,         'two' : 2, 'three' : 3 },
+      { 'one' : undefined, 'two' : 2, 'three' : 3 },
+      { 'one' : 1,         'two' : 2, 'three' : 3 },
+      { 'one' : null,      'two' : 2, 'three' : 3 },
+      { 'one' : 1,         'two' : 2, 'three' : 3 }
+    ], 'one', true ) ).to.deep.equal( [1, 1, 1] );
+
+    expect( iter.pluck( iter.pluck( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map( function( o, i ) {
+      return { src : { val : i } };
+    } ), 'src' ), 'val' ) ).to.deep.equal( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] );
+
+    expect( iter.pluck( iter.pluck( iter.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
+      return { src : { val : { id : i % 2 ? i : null } } };
+    } ), 'src' ), 'val' ), 'id', true ) ).to.deep.equal( [1, 3, 5, 7, 9] );
+
+    expect( iter.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
+      return { src : { val : i } };
+    } ), 'src.val' ) ).to.deep.equal( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] );
+
+    expect( iter.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
+      return { src : { val : { id : i % 2 ? i : null } } };
+    } ), 'src.val.id', true ) ).to.deep.equal( [1, 3, 5, 7, 9] );
+
+  } );
 });
 
