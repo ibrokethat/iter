@@ -293,14 +293,14 @@ function toArray(arrayLike, i) {
   @param        {function} func
   @return       {any}
 */
-function reduce(ret, o, func){
+function reduce(o, func, ret){
 
   var iterable;
 
-  if(typeof o === "function" && typeof func === "undefined") {
+  if (ret) {
 
     iterable = iterator(ret);
-    func = o;
+
     try {
       ret = iterable.next();
     }
