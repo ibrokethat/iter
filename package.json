@@ -4,10 +4,12 @@
   "version": "0.0.4",
   "author": "si@ibrokethat.com",
   "contributors": [
-    { "name": "Simon Jefford", "email": "si@ibrokethat.com" }
+    { "name": "Simon Jefford", "email": "si@ibrokethat.com" },
+    { "name": "Christos Constandinou", "email": "christos@muigui.com" }
   ],
   "dependencies": {},
   "devDependencies": {
+    "chai": "latest",
     "mocha": "1.2.x",
     "sinon": "1.3.x"
   },
