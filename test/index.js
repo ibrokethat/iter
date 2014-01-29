@@ -233,7 +233,7 @@ describe("test iter module: ", function() {
 
     });
 
-     it("should an reduce an object to a value", function() {
+    it("should an reduce an object to a value", function() {
 
       var results;
 
@@ -244,6 +244,29 @@ describe("test iter module: ", function() {
       assert.equal(20, results);
 
     });
+
+    it("should pass the accumulator correctly", function() {
+
+      var spy = fakes.spy();
+
+      reduce({a:10, b:20, c:20, d:30, e:40}, spy, 0);
+
+      assert.equal(spy.args[0][0], 0);
+
+    });
+
+    it("should pass the accumulator correctly", function() {
+
+      var spy = fakes.spy();
+
+      reduce({a:0, b:1, c:2, d:3, e:4}, spy);
+
+      assert.equal(spy.args[0][0][0], 0);
+      assert.equal(spy.args[0][0][1], 'a');
+    });
+
+
+
   });
 
 

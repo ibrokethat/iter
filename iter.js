@@ -301,7 +301,7 @@ function reduce (o, func, acc, scope){
 
   var iterable;
 
-  if (!acc) {
+  if (typeof acc === "undefined") {
 
     iterable = iterator(o);
     try {
