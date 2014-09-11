@@ -1,10 +1,13 @@
 # iter
 
-Iteration: loosely based on pythons iter tools
+  Iteration functionality
+  Taking the best ideas from various other libraries (pythons iter tools, ramda, etc)
+
+
 
 ## Install
 
-       npm install iter
+  npm install iter
 
 
 ##  What is iter?

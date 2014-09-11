@@ -1,7 +1,7 @@
 {
   "name": "super-iter",
   "description": "super iteration",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "author": "si@ibrokethat.com",
   "contributors": [
     { "name": "Simon Jefford", "email": "si@ibrokethat.com" },
@@ -21,7 +21,7 @@
   "main": "iter.js",
   "scripts": {
     "prepublish" : "npm prune",
-    "test": "mocha -u bdd"
+    "test": "node --harmony --harmony_typeof ./node_modules/mocha/bin/_mocha --colors --recursive --ui bdd --reporter spec ./test --NODE_ENV=test"
   },
-  "engines": { "node": "*" }
+  "engines": {"node": "0.11.x"}
 }

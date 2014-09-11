@@ -1,8 +1,67 @@
 /**
   @module   iteration methods
 */
-
+"use strict";
 var StopIteration = new Error();
+
+
+function curry2 (fn) {
+  return function (a, b) {
+    switch (arguments.length) {
+      case 0: throw new Error();
+      case 1: return function (b) {
+        return fn(b, a);
+      };
+    };
+    return fn(a, b);
+  }
+}
+
+function curry3(fn) {
+  return function(a, b, c) {
+    switch (arguments.length) {
+        case 0: throw NO_ARGS_EXCEPTION;
+        case 1: return curry2(function(b, c) {
+          return fn(b, c, a);
+        });
+        case 2: return function(c) {
+          return fn(a, b, c);
+        };
+    }
+    return fn(a, b, c);
+  };
+}
+
+
+
+function isArrayLike (o) {
+  return typeof o.length === 'number';
+}
+
+
+function returns (o) {
+
+  var r, set;
+
+  if (isArrayLike(o) || typeof o === 'function' || typeof o.next === 'function') {
+    r = [];
+    set = function (v) {
+      r.push(v);
+    };
+  }
+  else {
+    r = {};
+    set = function (v, k) {
+      r[k] = v;
+    };
+  }
+
+  return {
+    set: set,
+    r: r
+  };
+}
+
 
 
 /**
@@ -10,60 +69,50 @@ var StopIteration = new Error();
   @param        {object} obect
   @return       {iterable}
 */
-function iterator(object){
+function iterator (object) {
 
-  var it = false;
+  var o = typeof object === 'function' ? object() : object;
 
-  if (typeof object.next ==='function') {
-    it = object;
-  }
-  else if (typeof object.__iter__ === "function") {
+  switch (true) {
 
-    it = object.__iter__();
+    //  is array like
+    case isArrayLike(o):
 
-  }
-  else if(object.length) {
-
-    var i = 0;
-
-    it = {
-      next: function() {
-        if (typeof object[i] !== 'undefined') {
-          return [object[i], i++];
-        }
-        throw StopIteration;
-      }
-    };
-
-  }
-  else {
-
-    try {
-
-      var keys = Object.keys(object);
       var i = 0;
+      var len = o.length;
 
-      it = {
-        next: function() {
-          if (typeof keys[i] !== 'undefined') {
-            return [object[keys[i]], keys[i++]];
+      return {
+        next: function () {
+          return {
+            value: o[i++],
+            done: i === len ? true : false
           }
-          throw StopIteration;
         }
-      };
-    }
-    catch(e) {
-      it = false;
-    }
+      }
 
+    //  iterate
+    case (typeof o.next === 'function'):
+
+      return o;
+
+    //  is obj with keys
+    default:
+
+      var i = 0;
+      var keys = Object.keys(o);
+      var len = keys.length;
+
+      return {
+        next: function () {
+          return {
+            value: o[keys[i++]],
+            done: i === len ? true : false
+          };
+        }
+      }
 
   }
-
-  return it;
 }
-
-
-
 
 /**
   @descrption   applies a function to each item in an object
@@ -71,64 +120,60 @@ function iterator(object){
   @param        {object} object
   @param        {func} function
 */
-function exhaust(object, func) {
+
+function _forEach (object, fn) {
+
+  var o = typeof object === 'function' ? object() : object;
 
   try {
-    if (typeof object.length === 'number') {
-      for (var i = 0, l = object.length; i < l; i++) {
-        func(object[i], i);
-      }
-    }
-    else {
-      if (typeof object.__iter__ === "function") {
-        object = object.__iter__();
-      }
-      if (typeof object.next === "function") {
-        var i = 0;
-        var r;
-        while (true) {
-          r = object.next();
-          func(r[0], r[1]);
+
+    switch (true) {
+
+      //  has .forEach
+      case (typeof o.forEach === 'function'):
+
+        o.forEach(fn);
+        break;
+
+      //  is array like
+      case isArrayLike(o):
+
+        var i = -1;
+        var length = o.length;
+        while (++i < length) {
+          fn(o[i], i);
         }
-      }
-      else if (Object.keys && Array.prototype.forEach) {
-        Object.keys(object).forEach(function(key) {
-          func(object[key], key);
+        break;
+
+      //  iterateor protocol
+      case (typeof o.next === 'function'):
+
+        var data = {};
+
+        while (!data.done) {
+          data = o.next();
+          fn(data.value);
+        }
+        break;
+
+      //  is obj with keys
+      default:
+
+        Object.keys(o).forEach(function(key) {
+          fn(o[key], key);
         });
-      }
-      else {
-        for (var key in object) {
-          func(object[key], key);
-        }
-      }
+
     }
+
   }
   catch (e) {
     if (e !== StopIteration) {
       throw e;
     }
-
   }
+
 }
 
-
-
-/**
-  @descrption   calls a function on each item in an object
-  @param        {o} object
-  @param        {func} function
-  @param        {object} [scope]
-*/
-function forEach(o, func, scope) {
-  if(typeof o.forEach === 'function') {
-    o.forEach(func, scope);
-  }
-  else {
-    exhaust(o, function(value, key){
-      func.call(scope, value, key);
-    });
-  }
-}
 
 
 /**
@@ -137,22 +182,14 @@ function forEach(o, func, scope) {
   @param        {func} function
   @param        {object} [scope]
 */
-function filter(o, func, scope) {
-  if(typeof o.filter === 'function') {
-    return o.filter(func, scope);
-  }
-  var ret = o.length ? [] : {};
-  exhaust(o, function(value, key){
-    if (func.call(scope, value, key)) {
-      if(o.length) {
-        ret.push(value);
-      }
-      else {
-        ret[key] = value;
-      }
+function _filter (o, fn) {
+  var r = returns(o);
+  _forEach(o, function (v, k) {
+    if (fn(v, k)) {
+      r.set(v, k);
     }
   });
-  return ret;
+  return r.r;
 }
 
 
@@ -163,24 +200,40 @@ function filter(o, func, scope) {
   @param        {object} [scope]
   @return       {object|array}
 */
-function map(o, func, scope) {
-  if(typeof o.map === 'function') {
-    return o.map(func, scope);
-  }
-  var ret = o.length ? [] : {};
-  exhaust(o, function(value, key){
-    var r = func.call(scope, value, key);
-    if(o.length) {
-      ret.push(r);
-    }
-    else {
-      ret[key] = r;
-    }
+function _map (o, fn) {
+  var r = returns(o);
+  _forEach(o, function (v, k) {
+    r.set(fn(v, k), k);
   });
-  return ret;
+  return r.r;
 }
 
 
+/**
+  @description  returns true if a === b
+  @param        {a} object
+  @param        {b} function
+  @return       {boolean}
+*/
+function _eq (a, b) {
+  return a === b;
+}
+
+function _negate (v, k, fn) {
+  return !fn(v, k);
+}
+
+
+function _findFirst (o, fn) {
+  var r;
+  _forEach(o, function (v, k) {
+    if (fn(v, k)) {
+      r = [v, k];
+      throw StopIteration;
+    }
+  });
+  return r;
+}
 
 
 /**
@@ -191,17 +244,11 @@ function map(o, func, scope) {
   @param        {object} [scope]
   @return       {boolean}
 */
-function some(o, func, scope) {
-  if(typeof o.some === 'function') {
-    return o.some(func, scope);
+function _some (o, fn) {
+  if (typeof o.some === 'function') {
+    return o.some(fn);
   }
-  var ret = false;
-  exhaust(o, function(value, key){
-    if ((ret = func.call(scope, value, key))) {
-      throw StopIteration;
-    }
-  });
-  return ret;
+  return !! _findFirst(o, fn);
 }
 
 
@@ -214,17 +261,11 @@ function some(o, func, scope) {
   @param        {object} [scope]
   @return       {boolean}
 */
-function every(o, func, scope) {
-  if(typeof o.every === 'function') {
-    return o.every(func, scope);
+function _every (o, fn) {
+  if (typeof o.every === 'function') {
+    return o.every(fn);
   }
-  var ret = true;
-  exhaust(o, function(value, key){
-    if (!(ret = func.call(scope, value, key))) {
-      throw StopIteration;
-    }
-  });
-  return ret;
+  return !(!! _findFirst(o, negate(fn)));
 }
 
 
@@ -235,20 +276,45 @@ function every(o, func, scope) {
   @param        {any} val
   @return       {int|string}
 */
-function indexOf(o, val) {
-  if(typeof o.indexOf === 'function') {
-    return o.indexOf(val);
+function _indexOf (o, el) {
+  if (typeof o.next === 'function') {
+    throw new TypeError('Object conformaing to iteration protocol supplied');
   }
-  var ret = -1;
-  exhaust(o, function(value, key){
-    if (value === val) {
-      ret = key;
-      throw StopIteration;
-    }
-  });
-  return ret;
+  if (typeof o.indexOf === 'function') {
+    return o.indexOf(el);
+  }
+  var r = _findFirst(o, eq(el));
+  return r ? r[1] : -1;
 }
 
+
+
+/**
+  @description  returns the index|key of the first item to match the predicate function
+  @param        {o} object
+  @param        {any} val
+  @return       {int|string}
+*/
+function _findIndex (o, fn) {
+  if (typeof o.next === 'function') {
+    throw new TypeError('Object conformaing to iteration protocol supplied');
+  }
+  var r = _findFirst(o, fn);
+  return r ? r[1] : -1;
+}
+
+
+/**
+  @description  returns the value of the first item to match the predicate function
+  @param        {o} object
+  @param        {any} val
+  @return       {int|string}
+*/
+function _find (o, fn) {
+  var r = _findFirst(o, fn);
+  return r ? r[0] : undefined;
+
+}
 
 
 /**
@@ -480,16 +546,18 @@ function range(start, stop, step) {
   };
 }
 
-
+//  public
 exports.StopIteration = StopIteration;
 exports.iterator      = iterator;
-exports.exhaust       = exhaust;
-exports.forEach       = forEach;
-exports.filter        = filter;
-exports.map           = map;
-exports.some          = some;
-exports.every         = every;
-exports.indexOf       = indexOf;
+var forEach = exports.forEach = curry2(_forEach);
+var filter = exports.filter = curry2(_filter);
+var map = exports.map = curry2(_map);
+var some = exports.some = curry2(_some);
+var every = exports.every = curry2(_every);
+var indexOf = exports.indexOf = curry2(_indexOf);
+var find = exports.find = curry2(_find);
+var findIndex = exports.findIndex = curry2(_findIndex);
+
 exports.lastIndexOf   = lastIndexOf;
 exports.toArray       = toArray;
 exports.reduce        = reduce;
@@ -500,3 +568,6 @@ exports.range         = range;
 exports.invoke        = invoke;
 exports.pluck         = pluck;
 
+// private
+var eq = curry2(_eq);
+var negate = curry3(_negate);
