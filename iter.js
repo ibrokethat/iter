@@ -224,7 +224,8 @@ function _negate (v, k, fn) {
 }
 
 
-function _findFirst (o, fn) {
+
+function _first (o, fn) {
   var r;
   _forEach(o, function (v, k) {
     if (fn(v, k)) {
@@ -234,6 +235,18 @@ function _findFirst (o, fn) {
   });
   return r;
 }
+
+
+function _last (o, fn) {
+  var r;
+  _forEach(o, function (v, k) {
+    if (fn(v, k)) {
+      r = [v, k];
+    }
+  });
+  return r;
+}
+
 
 
 /**
@@ -248,7 +261,7 @@ function _some (o, fn) {
   if (typeof o.some === 'function') {
     return o.some(fn);
   }
-  return !! _findFirst(o, fn);
+  return !! _first(o, fn);
 }
 
 
@@ -265,7 +278,7 @@ function _every (o, fn) {
   if (typeof o.every === 'function') {
     return o.every(fn);
   }
-  return !(!! _findFirst(o, negate(fn)));
+  return !(!! _first(o, negate(fn)));
 }
 
 
@@ -283,7 +296,7 @@ function _indexOf (o, el) {
   if (typeof o.indexOf === 'function') {
     return o.indexOf(el);
   }
-  var r = _findFirst(o, eq(el));
+  var r = _first(o, eq(el));
   return r ? r[1] : -1;
 }
 
@@ -299,7 +312,7 @@ function _findIndex (o, fn) {
   if (typeof o.next === 'function') {
     throw new TypeError('Object conformaing to iteration protocol supplied');
   }
-  var r = _findFirst(o, fn);
+  var r = _first(o, fn);
   return r ? r[1] : -1;
 }
 
@@ -311,7 +324,7 @@ function _findIndex (o, fn) {
   @return       {int|string}
 */
 function _find (o, fn) {
-  var r = _findFirst(o, fn);
+  var r = _first(o, fn);
   return r ? r[0] : undefined;
 
 }
@@ -323,17 +336,40 @@ function _find (o, fn) {
   @param        {any} val
   @return       {int|string}
 */
-function lastIndexOf(o, val){
-  if(typeof o.lastIndexOf === 'function') {
-    return o.lastIndexOf(val);
+function _lastIndexOf (o, el) {
+  if (typeof o.next === 'function') {
+    throw new TypeError('Object conformaing to iteration protocol supplied');
   }
-  var ret = -1;
-  exhaust(o, function(value, key){
-    if (value === val) {
-      ret = key;
-    }
-  });
-  return ret;
+  var r = _last(o, eq(el));
+  return r ? r[1] : -1;
+}
+
+/**
+  @description  returns the index|key of the first item to match the predicate function
+  @param        {o} object
+  @param        {any} val
+  @return       {int|string}
+*/
+function _findLastIndex (o, fn) {
+  if (typeof o.next === 'function') {
+    throw new TypeError('Object conformaing to iteration protocol supplied');
+  }
+  var r = _last(o, fn);
+  return r ? r[1] : -1;
+}
+
+
+
+/**
+  @description  returns the value of the first item to match the predicate function
+  @param        {o} object
+  @param        {any} val
+  @return       {int|string}
+*/
+function _findLast (o, fn) {
+  var r = _last(o, fn);
+  return r ? r[0] : undefined;
+
 }
 
 
@@ -557,6 +593,9 @@ var every = exports.every = curry2(_every);
 var indexOf = exports.indexOf = curry2(_indexOf);
 var find = exports.find = curry2(_find);
 var findIndex = exports.findIndex = curry2(_findIndex);
+var lastIndexOf = exports.lastIndexOf = curry2(_lastIndexOf);
+var findLast = exports.findLast = curry2(_findLast);
+var findLastIndex = exports.findLastIndex = curry2(_findLastIndex);
 
 exports.lastIndexOf   = lastIndexOf;
 exports.toArray       = toArray;

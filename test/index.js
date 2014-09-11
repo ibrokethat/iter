@@ -358,6 +358,8 @@ describe("test iter module: ", function() {
 
     it("should indexOf on an array", function() {
 
+      arr.push(30)
+
       var results = underTest.indexOf(arr, 30);
 
       expect(results).to.be.equal(2);
@@ -370,6 +372,8 @@ describe("test iter module: ", function() {
 
 
     it("should indexOf on an object", function() {
+
+      obj['sixty'] = 30;
 
       var results = underTest.indexOf(obj, 30);
 
@@ -502,6 +506,163 @@ describe("test iter module: ", function() {
       }
 
       expect(err).to.be.instanceOf(Error);
+
+    });
+
+  });
+
+
+
+  describe("function lastIndexOf", function() {
+
+    it("should lastIndexOf on an array", function() {
+
+      arr.push(30)
+
+      var results = underTest.lastIndexOf(arr, 30);
+
+      expect(results).to.be.equal(5);
+
+      results = underTest.lastIndexOf(arr, 5000);
+
+      expect(results).to.be.equal(-1);
+
+    });
+
+
+    it("should lastIndexOf on an object", function() {
+
+      obj['sixty'] = 30;
+
+      var results = underTest.lastIndexOf(obj, 30);
+
+      expect(results).to.be.equal('sixty');
+
+      results = underTest.lastIndexOf(obj, 5000);
+
+      expect(results).to.be.equal(-1);
+
+    });
+
+
+    it("should throw an exception for on an object with next method", function() {
+
+      var err;
+
+      try {
+
+        underTest.lastIndexOf(gen(), 3);
+      }
+      catch (e) {
+        err = e;
+      }
+
+      expect(err).to.be.instanceOf(Error);
+
+    });
+
+  });
+
+
+  describe("function findLast", function() {
+
+    it("should find on an array", function() {
+
+      var results = underTest.findLast(arr, function(value) {
+        return value > 30;
+      });
+
+      expect(results).to.be.equal(50);
+
+      results = underTest.find(arr, function(value) {
+        return value > 100;
+      });
+
+      expect(results).to.be.undefined;
+
+    });
+
+    it("should findLast on an object", function() {
+
+      var results = underTest.findLast(obj, function(value) {
+        return value > 30;
+      });
+
+      expect(results).to.be.equal(50);
+
+      results = underTest.find(obj, function(value) {
+        return value > 100;
+      });
+
+      expect(results).to.be.undefined;
+
+    });
+
+    it("should findLast on an object with a next method", function() {
+
+      var results = underTest.findLast(gen(), function(value) {
+        return value > 3;
+      });
+
+      expect(results).to.be.equal(5);
+
+      results = underTest.findLast(gen(), function(value) {
+        return value > 10;
+      });
+
+      expect(results).to.be.undefined;
+
+    });
+
+  });
+
+  describe("function findLastIndex", function() {
+
+    it("should find on an array", function() {
+
+      var results = underTest.findLastIndex(arr, function(value) {
+        return value > 30;
+      });
+
+      expect(results).to.be.equal(4);
+
+      results = underTest.findLast(arr, function(value) {
+        return value > 100;
+      });
+
+      expect(results).to.be.equal(-1);
+
+    });
+
+    it("should findLastIndex on an object", function() {
+
+      var results = underTest.findLastIndex(obj, function(value) {
+        return value > 30;
+      });
+
+      expect(results).to.be.equal('fifty');
+
+      results = underTest.findLastIndex(obj, function(value) {
+        return value > 100;
+      });
+
+      expect(results).to.be.equal(-1);
+
+    });
+
+    it("should findLast on an object with a next method", function() {
+
+      var results = underTest.findLast(gen(), function(value) {
+        return value > 3;
+      });
+
+      expect(results).to.be.equal(5);
+
+      results = underTest.find(gen(), function(value) {
+        return value > 10;
+      });
+
+      expect(results).to.be.equal(-1);
 
     });
 
