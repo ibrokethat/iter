@@ -84,7 +84,7 @@ function iterator (object) {
       return {
         next: function () {
           return {
-            value: o[i++],
+            value: [o[i], i++],
             done: i === len ? true : false
           }
         }
@@ -105,7 +105,7 @@ function iterator (object) {
       return {
         next: function () {
           return {
-            value: o[keys[i++]],
+            value: [o[keys[i]], keys[i++]],
             done: i === len ? true : false
           };
         }
@@ -152,7 +152,7 @@ function _forEach (object, fn) {
 
         while (!data.done) {
           data = o.next();
-          fn(data.value);
+          fn(data.value[0], data.value[1]);
         }
         break;
 
@@ -412,7 +412,7 @@ function _reduce (o, fn, acc){
       throw new TypeError("reduce() of sequence with no initial value");
     }
     else {
-      acc = r.value;
+      acc = r.value[0];
     }
 
   }
@@ -518,7 +518,7 @@ function zip () {
     var values = [v];
     var i = 0;
     while (++i < args.length) {
-      values.push(typeof k !== 'undefined' ? args[i][k] : args[i].next().value);
+      values.push(typeof args[i].next === 'function' ? args[i].next().value[0] : args[i][k]);
     }
     r.set(values, k);
   });
@@ -589,7 +589,7 @@ function _imap (o, fn) {
       var data = iterable.next();
 
       return {
-        value: fn(data.value),
+        value: [fn(data.value[0], data.value[1]), data.value[1]],
         done: data.done
       };
     }
@@ -616,7 +616,7 @@ function _ifilter (o, fn) {
 
       while (true) {
 
-        if (fn(data.value)) {
+        if (fn(data.value[0], data.value[1])) {
           if (!prev) {
             prev = data;
           }
