@@ -783,8 +783,36 @@ describe("test iter module: ", function() {
 
     });
 
+  });
+
+  describe('function zip', function () {
+
+    it('should zip a bunch of arrays', function () {
+
+      var results = underTest.zip(arr, arr, arr);
+
+      expect(results).to.deep.equal([[10, 10, 10], [20, 20, 20], [30, 30, 30], [40, 40, 40], [50, 50, 50]]);
+
+    });
+
+    it('should zip a bunch of objects', function () {
+
+      var results = underTest.zip(obj, obj, obj);
+
+      expect(results).to.deep.equal({ten: [10, 10, 10], twenty: [20, 20, 20], thirty: [30, 30, 30], forty: [40, 40, 40], fifty: [50, 50, 50]});
+
+    });
+
+    it('should zip a bunch of generators', function () {
+
+      var results = underTest.zip(gen(), gen(), gen());
+
+      expect(results).to.deep.equal([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [5, 5, 5]]);
+
+    });
 
   });
+
 
   describe('function chain', function () {
 
@@ -872,6 +900,20 @@ describe("test iter module: ", function() {
       expect(c.next()).to.be.deep.equal({value:40, done: false});
       expect(c.next()).to.be.deep.equal({value:50, done: true});
 
+      c = underTest.ifilter(arr, function (v) {
+        return v < 25;
+      });
+
+      expect(c.next()).to.be.deep.equal({value:10, done: false});
+      expect(c.next()).to.be.deep.equal({value:20, done: true});
+
+      c = underTest.ifilter(arr, function (v) {
+        return ((v / 10) % 2 === 0);
+      });
+
+      expect(c.next()).to.be.deep.equal({value:20, done: false});
+      expect(c.next()).to.be.deep.equal({value:40, done: true});
+
     });
 
     it('should create an iterator that filters over all items of an object', function () {
@@ -883,6 +925,20 @@ describe("test iter module: ", function() {
       expect(c.next()).to.be.deep.equal({value:30, done: false});
       expect(c.next()).to.be.deep.equal({value:40, done: false});
       expect(c.next()).to.be.deep.equal({value:50, done: true});
+
+      c = underTest.ifilter(obj, function (v) {
+        return v < 25;
+      });
+
+      expect(c.next()).to.be.deep.equal({value:10, done: false});
+      expect(c.next()).to.be.deep.equal({value:20, done: true});
+
+      c = underTest.ifilter(obj, function (v) {
+        return ((v / 10) % 2 === 0);
+      });
+
+      expect(c.next()).to.be.deep.equal({value:20, done: false});
+      expect(c.next()).to.be.deep.equal({value:40, done: true});
 
     });
 
@@ -897,10 +953,23 @@ describe("test iter module: ", function() {
       expect(c.next()).to.be.deep.equal({value:4, done: false});
       expect(c.next()).to.be.deep.equal({value:5, done: true});
 
+      c = underTest.ifilter(gen(), function (v) {
+        return v < 3;
+      });
+
+      expect(c.next()).to.be.deep.equal({value:1, done: false});
+      expect(c.next()).to.be.deep.equal({value:2, done: true});
+
+      c = underTest.ifilter(gen(), function (v) {
+        return (v % 2 === 0);
+      });
+
+      expect(c.next()).to.be.deep.equal({value:2, done: false});
+      expect(c.next()).to.be.deep.equal({value:4, done: true});
+
     });
 
   });
-
 
 
   // it( 'function invoke', function() {

@@ -2,8 +2,8 @@
   @module   iteration methods
 */
 "use strict";
-var StopIteration = new Error();
 
+var StopIteration = new Error();
 
 function curry2 (fn) {
   return function (a, b) {
@@ -505,6 +505,29 @@ var sum = reduce(function(acc, a) {
 });
 
 
+/*
+  todo - map over the longest arg
+       - throw if args are not the same
+*/
+function zip () {
+
+  var args = arguments;
+  var r = returns(args[0]);
+
+  _forEach(args[0], function (v, k) {
+    var values = [v];
+    var i = 0;
+    while (++i < args.length) {
+      values.push(typeof k !== 'undefined' ? args[i][k] : args[i].next().value);
+    }
+    r.set(values, k);
+  });
+
+  return r.r;
+}
+
+
+
 
 /**
   @description  creates an iterable object that iterates over all it's parameter objects
@@ -586,12 +609,12 @@ function _ifilter (o, fn) {
 
       if (next) {
         prev = next;
-        // next = false;
+        next = false;
       }
 
       var data = iterable.next();
 
-      while (!data.done) {
+      while (true) {
 
         if (fn(data.value)) {
           if (!prev) {
@@ -602,6 +625,11 @@ function _ifilter (o, fn) {
             break
           }
         };
+
+        if ((prev && prev.done) || data.done) {
+          break;
+        }
+
         data = iterable.next();
       }
 
@@ -660,6 +688,7 @@ exports.toArray = toArray;
 exports.reduce = reduce;
 exports.sum = sum;
 exports.chain = chain;
+exports.zip = zip;
 
 exports.range = range;
 exports.invoke = invoke;
