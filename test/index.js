@@ -224,6 +224,15 @@ describe("test iter module: ", function() {
 
     });
 
+    it("should filter on an object with a next method with string keys", function() {
+
+      var results = underTest.filter(genString(), function(value) {
+        return value < 3;
+      });
+
+      expect(results).to.be.deep.equal({one: 1, two: 2});
+
+    });
 
   });
 
@@ -261,6 +270,17 @@ describe("test iter module: ", function() {
       expect(results).to.be.deep.equal([2, 4, 6, 8, 10]);
 
     });
+
+    it("should map on an object with a next method with string keys", function() {
+
+     var results = underTest.map(genString(), function(value) {
+        return value * 2;
+      });
+
+      expect(results).to.be.deep.equal({one: 2, two: 4, three: 6, four: 8, five: 10});
+
+    });
+
 
   });
 
@@ -824,6 +844,14 @@ describe("test iter module: ", function() {
       var results = underTest.zip(gen(), gen(), gen());
 
       expect(results).to.deep.equal([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [5, 5, 5]]);
+
+    });
+
+    it('should zip a bunch of generators with string keys', function () {
+
+      var results = underTest.zip(genString(), genString(), genString());
+
+      expect(results).to.deep.equal({one: [1, 1, 1], two: [2, 2, 2], three: [3, 3, 3], four: [4, 4, 4], five: [5, 5, 5]});
 
     });
 

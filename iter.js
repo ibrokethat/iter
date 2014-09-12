@@ -43,22 +43,36 @@ function returns (o) {
 
   var r, set;
 
-  if (isArrayLike(o) || typeof o === 'function' || typeof o.next === 'function') {
+  function setArray(v) {
+    r.push(v);
+  };
+  function setObject (v, k) {
+    r[k] = v;
+  };
+  function setObjectOrArray (v, k) {
+    if (typeof k === 'number') {
+      r = r || [];
+      setArray(v);
+    }
+    else {
+      r = r || Object.create(null);
+      setObject(v, k);
+    }
+  };
+
+  if (isArrayLike(o)) {
     r = [];
-    set = function (v) {
-      r.push(v);
-    };
+    set = setArray;
   }
   else {
-    r = {};
-    set = function (v, k) {
-      r[k] = v;
-    };
+    set = setObjectOrArray;
   }
 
   return {
     set: set,
-    r: r
+    get: function () {
+      return r;
+    }
   };
 }
 
@@ -190,7 +204,7 @@ function _filter (o, fn) {
       r.set(v, k);
     }
   });
-  return r.r;
+  return r.get();
 }
 
 
@@ -206,7 +220,7 @@ function _map (o, fn) {
   _forEach(o, function (v, k) {
     r.set(fn(v, k), k);
   });
-  return r.r;
+  return r.get();
 }
 
 
@@ -523,9 +537,8 @@ function zip () {
     r.set(values, k);
   });
 
-  return r.r;
+  return r.get();
 }
-
 
 
 
