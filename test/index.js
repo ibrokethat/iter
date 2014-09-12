@@ -626,7 +626,7 @@ describe("test iter module: ", function() {
 
       expect(results).to.be.equal(4);
 
-      results = underTest.findLast(arr, function(value) {
+      results = underTest.findLastIndex(arr, function(value) {
         return value > 100;
       });
 
@@ -650,19 +650,19 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should findLast on an object with a next method", function() {
+    it("should throw an exception for on an object with next method", function() {
 
-      var results = underTest.findLast(gen(), function(value) {
-        return value > 3;
-      });
+      var err;
 
-      expect(results).to.be.equal(5);
+      try {
 
-      results = underTest.find(gen(), function(value) {
-        return value > 10;
-      });
+        underTest.lastIndexOf(gen(), 3);
+      }
+      catch (e) {
+        err = e;
+      }
 
-      expect(results).to.be.equal(-1);
+      expect(err).to.be.instanceOf(Error);
 
     });
 
@@ -670,57 +670,237 @@ describe("test iter module: ", function() {
 
 
 
-  // describe("function reduce", function() {
+  describe("function reduce", function() {
 
-  //   it("should an reduce on an array to a value", function() {
+    it("should reduce on an array", function() {
 
-  //     var freduce = fakes.spy(Array.prototype, "reduce"),
-  //         results;
+      var results = underTest.reduce(arr, function(acc, value) {
+        return acc + value;
+      }, 10);
 
-  //     results = reduce([0, 1, 2, 3, 4], function(acc, value) {
-  //       return acc + value;
-  //     }, 10);
+      expect(results).to.be.equal(160);
 
-  //     expect(1, freduce.callCount);
-  //     expect(20, results);
+      results = underTest.reduce(arr, function(acc, value) {
+        return acc + value;
+      });
 
-  //   });
+      expect(results).to.be.equal(150);
 
-  //   it("should an reduce on an object to a value", function() {
+    });
 
-  //     var results;
+    it("should an reduce on an object", function() {
 
-  //     results = reduce({a:0, b:1, c:2, d:3, e:4}, function(acc, value, key) {
-  //       return acc + value;
-  //     }, 10);
+      var results = underTest.reduce(obj, function(acc, value, key) {
+        return acc + value;
+      }, 10);
 
-  //     expect(20, results);
+      expect(results).to.be.equal(160);
 
-  //   });
+      results = underTest.reduce(obj, function(acc, value) {
+        return acc + value;
+      });
 
-  //   it("should pass the accumulator correctly", function() {
+      expect(results).to.be.equal(150);
 
-  //     var spy = fakes.spy();
+    });
 
-  //     reduce({a:10, b:20, c:20, d:30, e:40}, spy, 0);
+    it("should an reduce on an object with a next method", function() {
 
-  //     expect(spy.args[0][0], 0);
+      var results = underTest.reduce(gen, function(acc, value, key) {
+        return acc + value;
+      }, 10);
 
-  //   });
+      expect(results).to.be.equal(25);
 
-  //   it("should pass the accumulator correctly", function() {
+      results = underTest.reduce(gen, function(acc, value) {
+        return acc + value;
+      });
 
-  //     var spy = fakes.spy();
+      expect(results).to.be.equal(15);
 
-  //     reduce({a:0, b:1, c:2, d:3, e:4}, spy);
-
-  //     expect(spy.args[0][0][0], 0);
-  //     expect(spy.args[0][0][1], 'a');
-  //   });
+    });
 
 
+    it("should pass the accumulator correctly", function() {
 
-  // });
+      var spy = fakes.spy();
+
+      underTest.reduce(obj, spy, 0);
+
+      expect(spy.args[0][0]).to.be.equal(0);
+
+    });
+
+    it("should pass the accumulator correctly", function() {
+
+      var spy = fakes.spy();
+
+      underTest.reduce(obj, spy);
+
+      expect(spy.args[0][0]).to.be.equal(10);
+
+    });
+
+
+  });
+
+
+  describe("function sum", function() {
+
+    it("should sum on an array", function() {
+
+      var results = underTest.sum(arr, 10);
+
+      expect(results).to.be.equal(160);
+
+      results = underTest.sum(arr);
+
+      expect(results).to.be.equal(150);
+
+    });
+
+    it("should an reduce on an object", function() {
+
+      var results = underTest.sum(obj, 10);
+
+      expect(results).to.be.equal(160);
+
+      results = underTest.sum(obj);
+
+      expect(results).to.be.equal(150);
+
+    });
+
+    it("should an reduce on an object with a next method", function() {
+
+      var results = underTest.sum(gen(), 10);
+
+      expect(results).to.be.equal(25);
+
+      results = underTest.sum(gen());
+
+      expect(results).to.be.equal(15);
+
+    });
+
+
+  });
+
+  describe('function chain', function () {
+
+    it('should create an iterator that iterates over all items', function () {
+
+      var c = underTest.chain([arr, obj, gen]);
+
+      expect(c.next()).to.be.deep.equal({value:10, done: false});
+      expect(c.next()).to.be.deep.equal({value:20, done: false});
+      expect(c.next()).to.be.deep.equal({value:30, done: false});
+      expect(c.next()).to.be.deep.equal({value:40, done: false});
+      expect(c.next()).to.be.deep.equal({value:50, done: false});
+      expect(c.next()).to.be.deep.equal({value:10, done: false});
+      expect(c.next()).to.be.deep.equal({value:20, done: false});
+      expect(c.next()).to.be.deep.equal({value:30, done: false});
+      expect(c.next()).to.be.deep.equal({value:40, done: false});
+      expect(c.next()).to.be.deep.equal({value:50, done: false});
+      expect(c.next()).to.be.deep.equal({value:1, done: false});
+      expect(c.next()).to.be.deep.equal({value:2, done: false});
+      expect(c.next()).to.be.deep.equal({value:3, done: false});
+      expect(c.next()).to.be.deep.equal({value:4, done: false});
+      expect(c.next()).to.be.deep.equal({value:5, done: true});
+
+    });
+
+  });
+
+
+  describe('function imap', function () {
+
+    it('should create an iterator that maps over all items of an array', function () {
+
+      var c = underTest.imap(arr, function (v) {
+        return v * 2;
+      });
+
+      expect(c.next()).to.be.deep.equal({value:20, done: false});
+      expect(c.next()).to.be.deep.equal({value:40, done: false});
+      expect(c.next()).to.be.deep.equal({value:60, done: false});
+      expect(c.next()).to.be.deep.equal({value:80, done: false});
+      expect(c.next()).to.be.deep.equal({value:100, done: true});
+
+    });
+
+    it('should create an iterator that maps over all items of an object', function () {
+
+      var c = underTest.imap(obj, function (v) {
+        return v * 2;
+      });
+
+      expect(c.next()).to.be.deep.equal({value:20, done: false});
+      expect(c.next()).to.be.deep.equal({value:40, done: false});
+      expect(c.next()).to.be.deep.equal({value:60, done: false});
+      expect(c.next()).to.be.deep.equal({value:80, done: false});
+      expect(c.next()).to.be.deep.equal({value:100, done: true});
+
+    });
+
+
+    it('should create an iterator that maps over all items of an iterator', function () {
+
+      var c = underTest.imap(gen(), function (v) {
+        return v * 2;
+      });
+
+      expect(c.next()).to.be.deep.equal({value:2, done: false});
+      expect(c.next()).to.be.deep.equal({value:4, done: false});
+      expect(c.next()).to.be.deep.equal({value:6, done: false});
+      expect(c.next()).to.be.deep.equal({value:8, done: false});
+      expect(c.next()).to.be.deep.equal({value:10, done: true});
+
+    });
+
+  });
+
+  describe('function ifilter', function () {
+
+    it('should create an iterator that filters over all items of an array', function () {
+
+      var c = underTest.ifilter(arr, function (v) {
+        return v > 25;
+      });
+
+      expect(c.next()).to.be.deep.equal({value:30, done: false});
+      expect(c.next()).to.be.deep.equal({value:40, done: false});
+      expect(c.next()).to.be.deep.equal({value:50, done: true});
+
+    });
+
+    it('should create an iterator that filters over all items of an object', function () {
+
+      var c = underTest.ifilter(obj, function (v) {
+        return v > 25;
+      });
+
+      expect(c.next()).to.be.deep.equal({value:30, done: false});
+      expect(c.next()).to.be.deep.equal({value:40, done: false});
+      expect(c.next()).to.be.deep.equal({value:50, done: true});
+
+    });
+
+
+    it('should create an iterator that filters over all items of an iterator', function () {
+
+      var c = underTest.ifilter(gen(), function (v) {
+        return v > 2;
+      });
+
+      expect(c.next()).to.be.deep.equal({value:3, done: false});
+      expect(c.next()).to.be.deep.equal({value:4, done: false});
+      expect(c.next()).to.be.deep.equal({value:5, done: true});
+
+    });
+
+  });
+
 
 
   // it( 'function invoke', function() {

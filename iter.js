@@ -8,7 +8,7 @@ var StopIteration = new Error();
 function curry2 (fn) {
   return function (a, b) {
     switch (arguments.length) {
-      case 0: throw new Error();
+      case 0: throw new Error('NO_ARGS_EXCEPTION');
       case 1: return function (b) {
         return fn(b, a);
       };
@@ -167,6 +167,7 @@ function _forEach (object, fn) {
 
   }
   catch (e) {
+
     if (e !== StopIteration) {
       throw e;
     }
@@ -395,36 +396,48 @@ function toArray(arrayLike, i) {
   @param        {function} func
   @return       {any}
 */
-function reduce (o, func, acc, scope){
+function _reduce (o, fn, acc){
 
   if(typeof o.reduce === 'function') {
-    return o.reduce(func.bind(scope || null), acc);
+    return o.reduce(fn, acc || false);
   }
 
-  var iterable;
+  var iterable = iterator(o);
 
   if (typeof acc === "undefined") {
 
-    iterable = iterator(o);
-    try {
-      acc = iterable.next();
+    var r = iterable.next();
+
+    if (r.done) {
+      throw new TypeError("reduce() of sequence with no initial value");
     }
-    catch (e) {
-      if (e === StopIteration) {
-        throw new TypeError("reduce() of sequence with no initial value");
-      }
-      throw e;
+    else {
+      acc = r.value;
     }
-  }
-  else {
-    iterable = iterator(o);
+
   }
 
-  exhaust(iterable, function(value, key){
-    acc = func.call(scope || null, acc, value, key);
+  _forEach(iterable, function(value, key){
+    acc = fn(acc, value, key);
   });
+
   return acc;
 }
+
+
+function reduce (o, fn, acc) {
+
+  switch (arguments.length) {
+    case 0: throw new Error('NO_ARGS_EXCEPTION');
+    case 1: return function (fn, acc) {
+      return _reduce(fn, o, acc);
+    };
+    default:
+      return _reduce(o, fn, acc);
+  };
+
+}
+
 
 /**
   @description  invokes the passed method on a collection of Objects and returns an Array of the values returned by each Object
@@ -433,18 +446,18 @@ function reduce (o, func, acc, scope){
   @param        {any} [arg1, arg2, ..., argN]
   @return       {array}
 */
+function invoke (items, method) {
+  var args = Array.prototype.slice.call(arguments, 2);
+  var i = -1;
+  var l = Array.isArray(items) ? items.length : 0;
+  var res = [];
 
-  function invoke( items, method ) {
-    var args  = Array.prototype.slice.call( arguments, 2 ),
-      i     = -1,
-      l     = Array.isArray( items ) ? items.length : 0,
-      res   = [];
-
-    while ( ++i < l )
-      res.push( items[i][method].apply( items[i], args ) );
-
-    return res;
+  while (++i < l) {
+    res.push(items[i][method].apply(items[i], args));
   }
+
+  return res;
+}
 
 
 
@@ -455,30 +468,30 @@ function reduce (o, func, acc, scope){
   @param        {boolean} [only_existing]
   @return       {array}
 */
+function pluck(items, key, only_existing) {
 
-  function pluck( items, key, only_existing ) {
-    only_existing = only_existing === true;
+  only_existing = only_existing === true;
 
-    var U,
-      i   = -1,
-      l   = Array.isArray( items ) ? items.length : 0,
-      res = [],
-      val;
+  var U,
+    i   = -1,
+    l   = Array.isArray( items ) ? items.length : 0,
+    res = [],
+    val;
 
-    if ( key.indexOf( '.' ) > -1 )
-      return reduce( key.split( '.' ), function( v, k ) {
-        return pluck( v, k, only_existing );
-      }, items );
+  if ( key.indexOf( '.' ) > -1 )
+    return reduce( key.split( '.' ), function( v, k ) {
+      return pluck( v, k, only_existing );
+    }, items );
 
-    while ( ++i < l ) {
-      val = key in Object( items[i] ) ? items[i][key] : U;
+  while ( ++i < l ) {
+    val = key in Object( items[i] ) ? items[i][key] : U;
 
-      if ( only_existing !== true || ( val !== null && val !== U ) )
-        res.push( val );
-    }
-
-    return res;
+    if ( only_existing !== true || ( val !== null && val !== U ) )
+      res.push( val );
   }
+
+  return res;
+}
 
 
 /**
@@ -487,12 +500,9 @@ function reduce (o, func, acc, scope){
   @param        {any} [ret]
   @return       {number}
 */
-function sum(o, ret) {
-  return reduce( o, function(ret, a){
-    return (ret + a);
-  }, ret || 0);
-}
-
+var sum = reduce(function(acc, a) {
+  return acc + a;
+});
 
 
 
@@ -501,7 +511,7 @@ function sum(o, ret) {
   @param        {array} args
   @return       {iterable}
 */
-function chain(args) {
+function chain (args) {
 
   if(args.length === 1) {
     return iterator(args[0]);
@@ -513,18 +523,23 @@ function chain(args) {
 
     next: function() {
 
-      try {
-        return iterables[0].next();
+      var data = iterables[0].next();
+
+      if (!data.done) {
+        return data;
       }
-      catch(e) {
-        if (e !== StopIteration) {
-          throw e;
+      else {
+
+        if (iterables.length === 1) {
+          return data;
         }
-        if(iterables.length === 1) {
-          throw StopIteration;
-        }
+
         iterables.shift();
-        return iterables[0].next();
+
+        return {
+          value: data.value,
+          done: false
+        };
       }
     }
 
@@ -540,19 +555,60 @@ function chain(args) {
   @param        {object} [scope]
   @return       {iterable}
 */
-function imap(o, func, scope){
+function _imap (o, fn) {
 
   var iterable = iterator(o);
 
   return {
 
     next: function () {
-      var it = iterable.next();
-      return [func.apply(scope || null, it[0]), it[1]];
 
+      var data = iterable.next();
+
+      return {
+        value: fn(data.value),
+        done: data.done
+      };
     }
+  }
+}
 
+
+function _ifilter (o, fn) {
+
+  var iterable = iterator(o);
+  var prev;
+  var next;
+
+  return {
+
+    next: function () {
+
+      if (next) {
+        prev = next;
+        // next = false;
+      }
+
+      var data = iterable.next();
+
+      while (!data.done) {
+
+        if (fn(data.value)) {
+          if (!prev) {
+            prev = data;
+          }
+          else {
+            next = data;
+            break
+          }
+        };
+        data = iterable.next();
+      }
+
+      return next ? prev : {value: prev.value, done: true};
+    }
   };
+
 }
 
 
@@ -564,7 +620,7 @@ function imap(o, func, scope){
   @param        {number} [step]
   @return       {iterable}
 */
-function range(start, stop, step) {
+function range  (start, stop, step) {
 
   var i = 0;
 
@@ -585,6 +641,7 @@ function range(start, stop, step) {
 //  public
 exports.StopIteration = StopIteration;
 exports.iterator      = iterator;
+
 var forEach = exports.forEach = curry2(_forEach);
 var filter = exports.filter = curry2(_filter);
 var map = exports.map = curry2(_map);
@@ -596,16 +653,17 @@ var findIndex = exports.findIndex = curry2(_findIndex);
 var lastIndexOf = exports.lastIndexOf = curry2(_lastIndexOf);
 var findLast = exports.findLast = curry2(_findLast);
 var findLastIndex = exports.findLastIndex = curry2(_findLastIndex);
+var imap = exports.imap = curry2(_imap);
+var ifilter = exports.ifilter = curry2(_ifilter);
 
-exports.lastIndexOf   = lastIndexOf;
-exports.toArray       = toArray;
-exports.reduce        = reduce;
-exports.sum           = sum;
-exports.chain         = chain;
-exports.imap          = imap;
-exports.range         = range;
-exports.invoke        = invoke;
-exports.pluck         = pluck;
+exports.toArray = toArray;
+exports.reduce = reduce;
+exports.sum = sum;
+exports.chain = chain;
+
+exports.range = range;
+exports.invoke = invoke;
+exports.pluck = pluck;
 
 // private
 var eq = curry2(_eq);
