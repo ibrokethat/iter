@@ -18,6 +18,7 @@ describe("test iter module: ", function() {
     fakes = sinon.sandbox.create();
 
     arr = [10, 20, 30, 40, 50];
+
     obj = {
       ten: 10,
       twenty: 20,
@@ -25,8 +26,9 @@ describe("test iter module: ", function() {
       forty: 40,
       fifty: 50
     }
-    gen = function () {
+    gen = function (six) {
       var a = [1, 2, 3, 4, 5];
+      if (six) a.push(3);
       var i = 0;
       return {
         next: function () {
@@ -38,8 +40,9 @@ describe("test iter module: ", function() {
       }
     }
 
-    genString = function () {
+    genString = function (six) {
       var a = {one: 1, two: 2, three: 3, four: 4, five: 5};
+      if (six) a['six'] = 3;
       var i = 0;
       var keys = Object.keys(a);
       return {
@@ -422,21 +425,31 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should throw an exception for on an object with next method", function() {
+    it("should indexOf on an object with next method", function() {
 
-      var err;
+      var results = underTest.indexOf(gen(true), 3);
 
-      try {
+      expect(results).to.be.equal(2);
 
-        underTest.indexOf(gen(), 3);
-      }
-      catch (e) {
-        err = e;
-      }
+      results = underTest.indexOf(obj, 5000);
 
-      expect(err).to.be.instanceOf(Error);
+      expect(results).to.be.equal(-1);
 
     });
+
+
+    it("should indexOf on an object with next method with a string key", function() {
+
+      var results = underTest.indexOf(genString(true), 3);
+
+      expect(results).to.be.equal('three');
+
+      results = underTest.indexOf(genString(true), 5000);
+
+      expect(results).to.be.equal(-1);
+
+    });
+
 
   });
 
@@ -529,21 +542,39 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should throw an exception for an object with next method", function() {
+    it("should findIndex on an object with next method", function() {
 
-      var err;
+      var results = underTest.findIndex(gen(true), function(value) {
+        return value > 2;
+      });
 
-      try {
+      expect(results).to.be.equal(2);
 
-        underTest.findIndex(gen(), function (){});
-      }
-      catch (e) {
-        err = e;
-      }
+      results = underTest.findIndex(obj, function (value) {
+        return value > 100;
+      });
 
-      expect(err).to.be.instanceOf(Error);
+      expect(results).to.be.equal(-1);
 
     });
+
+
+    it("should findIndex on an object with next method with a string key", function() {
+
+      var results = underTest.findIndex(genString(true), function(value) {
+        return value > 2;
+      });
+
+      expect(results).to.be.equal('three');
+
+      results = underTest.findIndex(obj, function (value) {
+        return value > 100;
+      });
+
+      expect(results).to.be.equal(-1);
+
+    });
+
 
   });
 
@@ -580,22 +611,30 @@ describe("test iter module: ", function() {
 
     });
 
+    it("should lastIndexOf on an object with next method", function() {
 
-    it("should throw an exception for on an object with next method", function() {
+      var results = underTest.lastIndexOf(gen(true), 3);
 
-      var err;
+      expect(results).to.be.equal(5);
 
-      try {
+      results = underTest.lastIndexOf(obj, 5000);
 
-        underTest.lastIndexOf(gen(), 3);
-      }
-      catch (e) {
-        err = e;
-      }
-
-      expect(err).to.be.instanceOf(Error);
+      expect(results).to.be.equal(-1);
 
     });
+
+    it("should lastIndexOf on an object with next method with a string", function() {
+
+      var results = underTest.lastIndexOf(genString(true), 3);
+
+      expect(results).to.be.equal('six');
+
+      results = underTest.lastIndexOf(genString(true), 5000);
+
+      expect(results).to.be.equal(-1);
+
+    });
+
 
   });
 
@@ -686,19 +725,36 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should throw an exception for on an object with next method", function() {
+    it("should findLastIndex on an object with next method", function() {
 
-      var err;
+      var results = underTest.findLastIndex(gen(true), function(value) {
+        return value > 2;
+      });
 
-      try {
+      expect(results).to.be.equal(5);
 
-        underTest.lastIndexOf(gen(), 3);
-      }
-      catch (e) {
-        err = e;
-      }
+      results = underTest.findLastIndex(obj, function (value) {
+        return value > 100;
+      });
 
-      expect(err).to.be.instanceOf(Error);
+      expect(results).to.be.equal(-1);
+
+    });
+
+
+    it("should findLastIndex on an object with next method with a string key", function() {
+
+      var results = underTest.findLastIndex(genString(true), function(value, k) {
+        return value === 3;
+      });
+
+      expect(results).to.be.equal('six');
+
+      results = underTest.findLastIndex(obj, function (value) {
+        return value > 100;
+      });
+
+      expect(results).to.be.equal(-1);
 
     });
 

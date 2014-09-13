@@ -17,6 +17,21 @@ function curry2 (fn) {
   }
 }
 
+function curryMin2 (fn) {
+  return function (a, b) {
+    switch (arguments.length) {
+      case 0: throw new Error('NO_ARGS_EXCEPTION');
+      case 1: return function (b) {
+        var args = toArray(arguments);
+        args.push(a);
+        return fn.apply(null, args);
+      };
+    };
+    return fn.apply(null, arguments);
+  }
+}
+
+
 function curry3(fn) {
   return function(a, b, c) {
     switch (arguments.length) {
@@ -224,6 +239,7 @@ function _map (o, fn) {
 }
 
 
+
 /**
   @description  returns true if a === b
   @param        {a} object
@@ -259,6 +275,7 @@ function _last (o, fn) {
       r = [v, k];
     }
   });
+
   return r;
 }
 
@@ -290,9 +307,11 @@ function _some (o, fn) {
   @return       {boolean}
 */
 function _every (o, fn) {
+
   if (typeof o.every === 'function') {
     return o.every(fn);
   }
+
   return !(!! _first(o, negate(fn)));
 }
 
@@ -304,13 +323,12 @@ function _every (o, fn) {
   @param        {any} val
   @return       {int|string}
 */
-function _indexOf (o, el) {
-  if (typeof o.next === 'function') {
-    throw new TypeError('Object conformaing to iteration protocol supplied');
-  }
+function indexOf (o, el) {
+
   if (typeof o.indexOf === 'function') {
     return o.indexOf(el);
   }
+
   var r = _first(o, eq(el));
   return r ? r[1] : -1;
 }
@@ -324,9 +342,11 @@ function _indexOf (o, el) {
   @return       {int|string}
 */
 function _findIndex (o, fn) {
-  if (typeof o.next === 'function') {
-    throw new TypeError('Object conformaing to iteration protocol supplied');
+
+  if (typeof o.findIndex === 'function') {
+    return o.findIndex(fn);
   }
+
   var r = _first(o, fn);
   return r ? r[1] : -1;
 }
@@ -339,9 +359,13 @@ function _findIndex (o, fn) {
   @return       {int|string}
 */
 function _find (o, fn) {
+
+  if (typeof o.find === 'function') {
+    return o.find(fn);
+  }
+
   var r = _first(o, fn);
   return r ? r[0] : undefined;
-
 }
 
 
@@ -351,10 +375,12 @@ function _find (o, fn) {
   @param        {any} val
   @return       {int|string}
 */
-function _lastIndexOf (o, el) {
-  if (typeof o.next === 'function') {
-    throw new TypeError('Object conformaing to iteration protocol supplied');
+function lastIndexOf (o, el) {
+
+  if (typeof o.lastIndexOf === 'function') {
+    return o.lastIndexOf(el);
   }
+
   var r = _last(o, eq(el));
   return r ? r[1] : -1;
 }
@@ -366,9 +392,7 @@ function _lastIndexOf (o, el) {
   @return       {int|string}
 */
 function _findLastIndex (o, fn) {
-  if (typeof o.next === 'function') {
-    throw new TypeError('Object conformaing to iteration protocol supplied');
-  }
+
   var r = _last(o, fn);
   return r ? r[1] : -1;
 }
@@ -382,9 +406,9 @@ function _findLastIndex (o, fn) {
   @return       {int|string}
 */
 function _findLast (o, fn) {
+
   var r = _last(o, fn);
   return r ? r[0] : undefined;
-
 }
 
 
@@ -529,6 +553,7 @@ function zip () {
   var r = returns(args[0]);
 
   _forEach(args[0], function (v, k) {
+
     var values = [v];
     var i = 0;
     while (++i < args.length) {
@@ -685,17 +710,18 @@ exports.iterator      = iterator;
 
 var forEach = exports.forEach = curry2(_forEach);
 var filter = exports.filter = curry2(_filter);
-var map = exports.map = curry2(_map);
+var map = exports.map = curryMin2(_map);
 var some = exports.some = curry2(_some);
 var every = exports.every = curry2(_every);
-var indexOf = exports.indexOf = curry2(_indexOf);
 var find = exports.find = curry2(_find);
 var findIndex = exports.findIndex = curry2(_findIndex);
-var lastIndexOf = exports.lastIndexOf = curry2(_lastIndexOf);
 var findLast = exports.findLast = curry2(_findLast);
 var findLastIndex = exports.findLastIndex = curry2(_findLastIndex);
 var imap = exports.imap = curry2(_imap);
 var ifilter = exports.ifilter = curry2(_ifilter);
+
+exports.lastIndexOf = lastIndexOf;
+exports.indexOf = indexOf;
 
 exports.toArray = toArray;
 exports.reduce = reduce;
