@@ -237,6 +237,26 @@ describe("test iter module: ", function() {
 
     });
 
+    it("should handle an empty object", function() {
+
+      var results = underTest.filter({}, function(value) {
+        return value > 30;
+      });
+
+      expect(results).to.be.deep.equal({});
+
+    });
+
+    it("should handle an empty array", function() {
+
+      var results = underTest.filter([], function(value) {
+        return value > 30;
+      });
+
+      expect(results).to.be.deep.equal([]);
+
+    });
+
   });
 
 
@@ -284,7 +304,25 @@ describe("test iter module: ", function() {
 
     });
 
+    it("should handle an empty object", function() {
 
+      var results = underTest.map({}, function(value) {
+        return value > 30;
+      });
+
+      expect(results).to.be.deep.equal({});
+
+    });
+
+    it("should handle an empty array", function() {
+
+      var results = underTest.map([], function(value) {
+        return value > 30;
+      });
+
+      expect(results).to.be.deep.equal([]);
+
+    });
   });
 
   describe("function some", function() {
@@ -503,6 +541,27 @@ describe("test iter module: ", function() {
       expect(results).to.be.undefined;
 
     });
+
+    it("should handle an empty object", function() {
+
+      var results = underTest.find({}, function(value) {
+        return value > 30;
+      });
+
+      expect(results).to.be.undefined;
+
+    });
+
+    it("should handle an empty array", function() {
+
+      var results = underTest.find([], function(value) {
+        return value > 30;
+      });
+
+      expect(results).to.be.undefined;
+
+    });
+
 
   });
 
@@ -833,6 +892,25 @@ describe("test iter module: ", function() {
 
     });
 
+    it("should handle an empty object", function() {
+
+      var results = underTest.reduce({}, function(acc, value) {
+        return value > 30;
+      }, 10);
+
+      expect(results).to.be.deep.equal(10);
+
+    });
+
+    it("should handle an empty array", function() {
+
+      var results = underTest.reduce([], function(acc, value) {
+        return value > 30;
+      }, 10);
+
+      expect(results).to.be.deep.equal(10);
+
+    });
 
   });
 

@@ -28,7 +28,7 @@ function curryMin2 (fn) {
       };
     };
     return fn.apply(null, arguments);
-  }
+   }
 }
 
 
@@ -86,7 +86,7 @@ function returns (o) {
   return {
     set: set,
     get: function () {
-      return r;
+      return r || {};
     }
   };
 }
@@ -213,6 +213,11 @@ function _forEach (object, fn) {
   @param        {object} [scope]
 */
 function _filter (o, fn) {
+
+  if (typeof o.filter === 'function') {
+    return o.filter(fn);
+  }
+
   var r = returns(o);
   _forEach(o, function (v, k) {
     if (fn(v, k)) {
@@ -231,11 +236,91 @@ function _filter (o, fn) {
   @return       {object|array}
 */
 function _map (o, fn) {
-  var r = returns(o);
-  _forEach(o, function (v, k) {
-    r.set(fn(v, k), k);
-  });
-  return r.get();
+
+  if (arguments.length === 2) {
+
+    if (typeof o.map === 'function') {
+      return o.map(fn);
+    }
+
+    var r = returns(o);
+    _forEach(o, function (v, k) {
+      r.set(fn(v, k), k);
+    });
+    return r.get();
+
+  }
+  else {
+
+    var args = toArray(arguments);
+    args.pop();
+    var r = returns(args[0]);
+
+    if (typeof args[0].next === 'function') {
+
+      var l = args.length;
+      var done = 0;
+      var i = 0;
+
+      var data;
+      var value;
+      var key;
+      var values = [];
+
+      while (i < l) {
+
+        data = args[i].next();
+        value = data.value[0];
+        key = data.value[1];
+        values.push(value);
+        i++;
+
+        if (data.done) {
+          done = done + 1;
+        }
+        if (i === l) {
+          i = 0;
+          values.push(key);
+          r.set(fn.apply(null, values), key);
+          values = [];
+          if (done === l) {
+            break;
+          }
+        }
+
+      }
+
+    }
+    else {
+
+      var longest = (function (args) {
+        var l = 0;
+        _reduce(args, function (acc, arg, i) {
+
+          if (arg > acc) {
+            l = i;
+          }
+          return arg;
+
+        }, typeof args[0].length === 'number' ? args[0].length : Object.key(args[0].length))
+        return l;
+      }());
+
+      _forEach(args[longest], function (v, k) {
+
+        var values = [];
+        var i = 0;
+        while (i++ < args.length) {
+          values.push(args[i][k]);
+        }
+        values.push(key);
+        r.set(fn.apply(null, values), key);
+      });
+
+      return r.get();
+    }
+  }
+
 }
 
 
@@ -440,10 +525,10 @@ function _reduce (o, fn, acc){
     return o.reduce(fn, acc || false);
   }
 
-  var iterable = iterator(o);
 
   if (typeof acc === "undefined") {
 
+    var iterable = iterator(o);
     var r = iterable.next();
 
     if (r.done) {
@@ -453,6 +538,9 @@ function _reduce (o, fn, acc){
       acc = r.value[0];
     }
 
+  }
+  else {
+    var iterable = o;
   }
 
   _forEach(iterable, function(value, key){
@@ -549,6 +637,7 @@ var sum = reduce(function(acc, a) {
 */
 function zip () {
 
+
   var args = arguments;
   var r = returns(args[0]);
 
@@ -566,6 +655,11 @@ function zip () {
 }
 
 
+// var zip = map(function () {
+//   var args = toArray(arguments);
+//   args.pop();
+//   return args;
+// });
 
 /**
   @description  creates an iterable object that iterates over all it's parameter objects
