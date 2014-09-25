@@ -70,7 +70,7 @@ function returns (o) {
       setArray(v);
     }
     else {
-      r = r || Object.create(null);
+      r = r || {};
       setObject(v, k);
     }
   };
