@@ -522,7 +522,7 @@ function toArray(arrayLike, i) {
 function _reduce (o, fn, acc){
 
   if(typeof o.reduce === 'function') {
-    return o.reduce(fn, acc || false);
+    return acc ? o.reduce(fn, acc) : o.reduce(fn);
   }
 
 
@@ -744,25 +744,29 @@ function _ifilter (o, fn) {
         next = false;
       }
 
-      var data = iterable.next();
+      if (!prev || (prev && !prev.done)) {
 
-      while (true) {
+        var data = iterable.next();
 
-        if (fn(data.value[0], data.value[1])) {
-          if (!prev) {
-            prev = data;
+        while (true) {
+
+          if (fn(data.value[0], data.value[1])) {
+            if (!prev) {
+              prev = data;
+            }
+            else {
+              next = data;
+              break
+            }
+          };
+
+          if ((prev && prev.done) || data.done) {
+            break;
           }
-          else {
-            next = data;
-            break
-          }
-        };
 
-        if ((prev && prev.done) || data.done) {
-          break;
+          data = iterable.next();
+
         }
-
-        data = iterable.next();
       }
 
       return next ? prev : {value: prev.value, done: true};

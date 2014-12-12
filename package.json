@@ -10,8 +10,8 @@
   "dependencies": {},
   "devDependencies": {
     "chai": "latest",
-    "mocha": "1.2.x",
-    "sinon": "1.3.x"
+    "mocha": "latest",
+    "sinon": "latest"
   },
   "keywords": ["ibrokethat", "iteration"],
   "repository": {

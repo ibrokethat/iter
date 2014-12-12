@@ -1070,6 +1070,33 @@ describe("test iter module: ", function() {
 
     it('should create an iterator that filters over all items of an array', function () {
 
+      var a = [
+        {
+          account_id: '850042461346',
+          fuel_type: 'gas',
+          date_from: '2013-06-15',
+          date_to: '2014-08-28'
+        },
+        {
+          account_id: '850042461346',
+          fuel_type: 'electricity',
+          date_from: '2013-06-14',
+          date_to: '2014-08-28'
+        }
+      ]
+
+      var b = [[0],[1]];
+      var c = [{a: 'a', b: 'b'},{a: 'a', b:'b'}];
+
+      var m = underTest.map(underTest.ifilter(a, function (range, i) {
+        console.log(i, range)
+        return !! range.date_from;
+      }), function (range) {
+        return range.fuel_type;
+      });
+
+      console.log(m)
+
       var c = underTest.ifilter(arr, function (v) {
         return v > 25;
       });
