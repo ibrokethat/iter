@@ -520,13 +520,14 @@ function toArray(arrayLike, i) {
   @return       {any}
 */
 function _reduce (o, fn, acc){
+  var noAcc = typeof acc === 'undefined';
 
   if(typeof o.reduce === 'function') {
-    return acc ? o.reduce(fn, acc) : o.reduce(fn);
+    return noAcc ? o.reduce(fn) : o.reduce(fn, acc);
   }
 
 
-  if (typeof acc === "undefined") {
+  if (noAcc) {
 
     var iterable = iterator(o);
     var r = iterable.next();
