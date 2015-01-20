@@ -5,49 +5,6 @@
 
 var StopIteration = new Error();
 
-function curry2 (fn) {
-  return function (a, b) {
-    switch (arguments.length) {
-      case 0: throw new Error('NO_ARGS_EXCEPTION');
-      case 1: return function (b) {
-        return fn(b, a);
-      };
-    };
-    return fn(a, b);
-  }
-}
-
-function curryMin2 (fn) {
-  return function (a, b) {
-    switch (arguments.length) {
-      case 0: throw new Error('NO_ARGS_EXCEPTION');
-      case 1: return function (b) {
-        var args = toArray(arguments);
-        args.push(a);
-        return fn.apply(null, args);
-      };
-    };
-    return fn.apply(null, arguments);
-   }
-}
-
-
-function curry3(fn) {
-  return function(a, b, c) {
-    switch (arguments.length) {
-        case 0: throw NO_ARGS_EXCEPTION;
-        case 1: return curry2(function(b, c) {
-          return fn(b, c, a);
-        });
-        case 2: return function(c) {
-          return fn(a, b, c);
-        };
-    }
-    return fn(a, b, c);
-  };
-}
-
-
 
 function isArrayLike (o) {
   return typeof o.length === 'number';
@@ -150,7 +107,7 @@ function iterator (object) {
   @param        {func} function
 */
 
-function _forEach (object, fn) {
+function forEach (object, fn) {
 
   var o = typeof object === 'function' ? object() : object;
 
@@ -212,14 +169,14 @@ function _forEach (object, fn) {
   @param        {func} function
   @param        {object} [scope]
 */
-function _filter (o, fn) {
+function filter (o, fn) {
 
   if (typeof o.filter === 'function') {
     return o.filter(fn);
   }
 
   var r = returns(o);
-  _forEach(o, function (v, k) {
+  forEach(o, function (v, k) {
     if (fn(v, k)) {
       r.set(v, k);
     }
@@ -235,7 +192,7 @@ function _filter (o, fn) {
   @param        {object} [scope]
   @return       {object|array}
 */
-function _map (o, fn) {
+function map (o, fn) {
 
   if (arguments.length === 2) {
 
@@ -244,7 +201,7 @@ function _map (o, fn) {
     }
 
     var r = returns(o);
-    _forEach(o, function (v, k) {
+    forEach(o, function (v, k) {
       r.set(fn(v, k), k);
     });
     return r.get();
@@ -295,7 +252,7 @@ function _map (o, fn) {
 
       var longest = (function (args) {
         var l = 0;
-        _reduce(args, function (acc, arg, i) {
+        reduce(args, function (acc, arg, i) {
 
           if (arg > acc) {
             l = i;
@@ -306,7 +263,7 @@ function _map (o, fn) {
         return l;
       }());
 
-      _forEach(args[longest], function (v, k) {
+      forEach(args[longest], function (v, k) {
 
         var values = [];
         var i = 0;
@@ -331,19 +288,19 @@ function _map (o, fn) {
   @param        {b} function
   @return       {boolean}
 */
-function _eq (a, b) {
+function eq (a, b) {
   return a === b;
 }
 
-function _negate (v, k, fn) {
+function negate (fn, v, k) {
   return !fn(v, k);
 }
 
 
 
-function _first (o, fn) {
+function first (o, fn) {
   var r;
-  _forEach(o, function (v, k) {
+  forEach(o, function (v, k) {
     if (fn(v, k)) {
       r = [v, k];
       throw StopIteration;
@@ -353,9 +310,9 @@ function _first (o, fn) {
 }
 
 
-function _last (o, fn) {
+function last (o, fn) {
   var r;
-  _forEach(o, function (v, k) {
+  forEach(o, function (v, k) {
     if (fn(v, k)) {
       r = [v, k];
     }
@@ -374,11 +331,11 @@ function _last (o, fn) {
   @param        {object} [scope]
   @return       {boolean}
 */
-function _some (o, fn) {
+function some (o, fn) {
   if (typeof o.some === 'function') {
     return o.some(fn);
   }
-  return !! _first(o, fn);
+  return !! first(o, fn);
 }
 
 
@@ -391,13 +348,13 @@ function _some (o, fn) {
   @param        {object} [scope]
   @return       {boolean}
 */
-function _every (o, fn) {
+function every (o, fn) {
 
   if (typeof o.every === 'function') {
     return o.every(fn);
   }
 
-  return !(!! _first(o, negate(fn)));
+  return !(!! first(o, negate.bind(null, fn)));
 }
 
 
@@ -414,7 +371,7 @@ function indexOf (o, el) {
     return o.indexOf(el);
   }
 
-  var r = _first(o, eq(el));
+  var r = first(o, eq.bind(null, el));
   return r ? r[1] : -1;
 }
 
@@ -426,13 +383,13 @@ function indexOf (o, el) {
   @param        {any} val
   @return       {int|string}
 */
-function _findIndex (o, fn) {
+function findIndex (o, fn) {
 
   if (typeof o.findIndex === 'function') {
     return o.findIndex(fn);
   }
 
-  var r = _first(o, fn);
+  var r = first(o, fn);
   return r ? r[1] : -1;
 }
 
@@ -443,13 +400,13 @@ function _findIndex (o, fn) {
   @param        {any} val
   @return       {int|string}
 */
-function _find (o, fn) {
+function find (o, fn) {
 
   if (typeof o.find === 'function') {
     return o.find(fn);
   }
 
-  var r = _first(o, fn);
+  var r = first(o, fn);
   return r ? r[0] : undefined;
 }
 
@@ -466,7 +423,7 @@ function lastIndexOf (o, el) {
     return o.lastIndexOf(el);
   }
 
-  var r = _last(o, eq(el));
+  var r = last(o, eq.bind(null, el));
   return r ? r[1] : -1;
 }
 
@@ -476,9 +433,9 @@ function lastIndexOf (o, el) {
   @param        {any} val
   @return       {int|string}
 */
-function _findLastIndex (o, fn) {
+function findLastIndex (o, fn) {
 
-  var r = _last(o, fn);
+  var r = last(o, fn);
   return r ? r[1] : -1;
 }
 
@@ -490,9 +447,9 @@ function _findLastIndex (o, fn) {
   @param        {any} val
   @return       {int|string}
 */
-function _findLast (o, fn) {
+function findLast (o, fn) {
 
-  var r = _last(o, fn);
+  var r = last(o, fn);
   return r ? r[0] : undefined;
 }
 
@@ -519,13 +476,14 @@ function toArray(arrayLike, i) {
   @param        {function} func
   @return       {any}
 */
-function _reduce (o, fn, acc){
+function reduce (o, fn, acc){
+
   var noAcc = typeof acc === 'undefined';
 
   if(typeof o.reduce === 'function') {
+
     return noAcc ? o.reduce(fn) : o.reduce(fn, acc);
   }
-
 
   if (noAcc) {
 
@@ -544,26 +502,13 @@ function _reduce (o, fn, acc){
     var iterable = o;
   }
 
-  _forEach(iterable, function(value, key){
+  forEach(iterable, function(value, key){
     acc = fn(acc, value, key);
   });
 
   return acc;
 }
 
-
-function reduce (o, fn, acc) {
-
-  switch (arguments.length) {
-    case 0: throw new Error('NO_ARGS_EXCEPTION');
-    case 1: return function (fn, acc) {
-      return _reduce(fn, o, acc);
-    };
-    default:
-      return _reduce(o, fn, acc);
-  };
-
-}
 
 
 /**
@@ -627,9 +572,12 @@ function pluck(items, key, only_existing) {
   @param        {any} [ret]
   @return       {number}
 */
-var sum = reduce(function(acc, a) {
-  return acc + a;
-});
+function sum (o, acc) {
+  return reduce(o, function(acc, a) {
+    return acc + a;
+  }, acc);
+}
+
 
 
 /*
@@ -642,7 +590,7 @@ function zip () {
   var args = arguments;
   var r = returns(args[0]);
 
-  _forEach(args[0], function (v, k) {
+  forEach(args[0], function (v, k) {
 
     var values = [v];
     var i = 0;
@@ -711,7 +659,7 @@ function chain (args) {
   @param        {object} [scope]
   @return       {iterable}
 */
-function _imap (o, fn) {
+function imap (o, fn) {
 
   var iterable = iterator(o);
 
@@ -730,7 +678,7 @@ function _imap (o, fn) {
 }
 
 
-function _ifilter (o, fn) {
+function ifilter (o, fn) {
 
   var iterable = iterator(o);
   var prev;
@@ -807,17 +755,17 @@ function range  (start, stop, step) {
 exports.StopIteration = StopIteration;
 exports.iterator      = iterator;
 
-var forEach = exports.forEach = curry2(_forEach);
-var filter = exports.filter = curry2(_filter);
-var map = exports.map = curryMin2(_map);
-var some = exports.some = curry2(_some);
-var every = exports.every = curry2(_every);
-var find = exports.find = curry2(_find);
-var findIndex = exports.findIndex = curry2(_findIndex);
-var findLast = exports.findLast = curry2(_findLast);
-var findLastIndex = exports.findLastIndex = curry2(_findLastIndex);
-var imap = exports.imap = curry2(_imap);
-var ifilter = exports.ifilter = curry2(_ifilter);
+exports.forEach = forEach;
+exports.filter = filter;
+exports.map = map;
+exports.some = some;
+exports.every = every;
+exports.find = find;
+exports.findIndex = findIndex;
+exports.findLast = findLast;
+exports.findLastIndex = findLastIndex;
+exports.imap = imap;
+exports.ifilter = ifilter;
 
 exports.lastIndexOf = lastIndexOf;
 exports.indexOf = indexOf;
@@ -831,7 +779,3 @@ exports.zip = zip;
 exports.range = range;
 exports.invoke = invoke;
 exports.pluck = pluck;
-
-// private
-var eq = curry2(_eq);
-var negate = curry3(_negate);
