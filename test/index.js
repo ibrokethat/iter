@@ -1070,33 +1070,6 @@ describe("test iter module: ", function() {
 
     it('should create an iterator that filters over all items of an array', function () {
 
-      var a = [
-        {
-          account_id: '850042461346',
-          fuel_type: 'gas',
-          date_from: '2013-06-15',
-          date_to: '2014-08-28'
-        },
-        {
-          account_id: '850042461346',
-          fuel_type: 'electricity',
-          date_from: '2013-06-14',
-          date_to: '2014-08-28'
-        }
-      ]
-
-      var b = [[0],[1]];
-      var c = [{a: 'a', b: 'b'},{a: 'a', b:'b'}];
-
-      var m = underTest.map(underTest.ifilter(a, function (range, i) {
-        console.log(i, range)
-        return !! range.date_from;
-      }), function (range) {
-        return range.fuel_type;
-      });
-
-      console.log(m)
-
       var c = underTest.ifilter(arr, function (v) {
         return v > 25;
       });
@@ -1177,49 +1150,49 @@ describe("test iter module: ", function() {
   });
 
 
-  // it( 'function invoke', function() {
-  //   expect( iter.invoke( [1, 2, 3, 4, 5], 'toFixed', 2 ) ).to.deep.equal( ['1.00', '2.00', '3.00', '4.00', '5.00'] );
-  //   expect( iter.invoke( [1, 2, 3, 4, 5, 6, 7], 'toString', 2 ) ).to.deep.equal( ['1', '10', '11', '100', '101', '110', '111'] );
+  it( 'function invoke', function() {
+    expect( underTest.invoke( [1, 2, 3, 4, 5], 'toFixed', 2 ) ).to.deep.equal( ['1.00', '2.00', '3.00', '4.00', '5.00'] );
+    expect( underTest.invoke( [1, 2, 3, 4, 5, 6, 7], 'toString', 2 ) ).to.deep.equal( ['1', '10', '11', '100', '101', '110', '111'] );
 
-  // } );
+  } );
 
 
-  // it( 'function pluck', function() {
-  //   var data = [{ data : { value : 'foo' } }, { data : { value : 'bar' } }, {}, { value : 'blim' }, { data : { value : 'blam' } }];
-  //   expect( iter.pluck( data, 'data.value' ) ).to.deep.equal( ["foo", "bar", undefined, undefined, "blam"] );
+  it( 'function pluck', function() {
+    var data = [{ data : { value : 'foo' } }, { data : { value : 'bar' } }, {}, { value : 'blim' }, { data : { value : 'blam' } }];
+    expect( underTest.pluck( data, 'data.value' ) ).to.deep.equal( ["foo", "bar", undefined, undefined, "blam"] );
 
-  //   expect( iter.pluck( data, 'data.value', true ) ).to.deep.equal( ["foo", "bar", "blam"] );
+    expect( underTest.pluck( data, 'data.value', true ) ).to.deep.equal( ["foo", "bar", "blam"] );
 
-  //   expect( iter.pluck( [
-  //     { 'one' : 1, 'two' : 2, 'three' : 3 },
-  //     { 'one' : 1, 'two' : 2, 'three' : 3 },
-  //     { 'one' : 1, 'two' : 2, 'three' : 3 }
-  //   ], 'two' ) ).to.deep.equal( [2, 2, 2] );
+    expect( underTest.pluck( [
+      { 'one' : 1, 'two' : 2, 'three' : 3 },
+      { 'one' : 1, 'two' : 2, 'three' : 3 },
+      { 'one' : 1, 'two' : 2, 'three' : 3 }
+    ], 'two' ) ).to.deep.equal( [2, 2, 2] );
 
-  //   expect( iter.pluck( [
-  //     { 'one' : 1,         'two' : 2, 'three' : 3 },
-  //     { 'one' : undefined, 'two' : 2, 'three' : 3 },
-  //     { 'one' : 1,         'two' : 2, 'three' : 3 },
-  //     { 'one' : null,      'two' : 2, 'three' : 3 },
-  //     { 'one' : 1,         'two' : 2, 'three' : 3 }
-  //   ], 'one', true ) ).to.deep.equal( [1, 1, 1] );
+    expect( underTest.pluck( [
+      { 'one' : 1,         'two' : 2, 'three' : 3 },
+      { 'one' : undefined, 'two' : 2, 'three' : 3 },
+      { 'one' : 1,         'two' : 2, 'three' : 3 },
+      { 'one' : null,      'two' : 2, 'three' : 3 },
+      { 'one' : 1,         'two' : 2, 'three' : 3 }
+    ], 'one', true ) ).to.deep.equal( [1, 1, 1] );
 
-  //   expect( iter.pluck( iter.pluck( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map( function( o, i ) {
-  //     return { src : { val : i } };
-  //   } ), 'src' ), 'val' ) ).to.deep.equal( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] );
+    expect( underTest.pluck( underTest.pluck( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map( function( o, i ) {
+      return { src : { val : i } };
+    } ), 'src' ), 'val' ) ).to.deep.equal( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] );
 
-  //   expect( iter.pluck( iter.pluck( iter.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
-  //     return { src : { val : { id : i % 2 ? i : null } } };
-  //   } ), 'src' ), 'val' ), 'id', true ) ).to.deep.equal( [1, 3, 5, 7, 9] );
+    expect( underTest.pluck( underTest.pluck( underTest.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
+      return { src : { val : { id : i % 2 ? i : null } } };
+    } ), 'src' ), 'val' ), 'id', true ) ).to.deep.equal( [1, 3, 5, 7, 9] );
 
-  //   expect( iter.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
-  //     return { src : { val : i } };
-  //   } ), 'src.val' ) ).to.deep.equal( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] );
+    expect( underTest.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
+      return { src : { val : i } };
+    } ), 'src.val' ) ).to.deep.equal( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] );
 
-  //   expect( iter.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
-  //     return { src : { val : { id : i % 2 ? i : null } } };
-  //   } ), 'src.val.id', true ) ).to.deep.equal( [1, 3, 5, 7, 9] );
+    expect( underTest.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
+      return { src : { val : { id : i % 2 ? i : null } } };
+    } ), 'src.val.id', true ) ).to.deep.equal( [1, 3, 5, 7, 9] );
 
-  // } );
+  } );
 });
 
