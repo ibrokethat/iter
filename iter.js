@@ -455,6 +455,49 @@ function findLast (o, fn) {
 
 
 /**
+  @description  take while the predicate is true
+  @param        {o} object
+  @param        {fn} funtion
+  @return       {int|string}
+*/
+function takeWhile (o, fn) {
+
+  var r = returns(o);
+  forEach(o, function (v, k) {
+    if (fn(v, k)) {
+      r.set(v, k);
+    }
+    else {
+      throw StopIteration;
+    }
+  });
+  return r.get();
+}
+
+
+/**
+  @description  ignore while the predicate is true
+  @param        {o} object
+  @param        {fn} function
+  @return       {int|string}
+*/
+function dropWhile (o, fn) {
+
+  var r = returns(o);
+  var take = false;
+  forEach(o, function (v, k) {
+
+    take = take || !fn(v, k);
+
+    if (take) {
+      r.set(v, k);
+    }
+  });
+  return r.get();
+}
+
+
+/**
   @description  converts an array like object to an array
   @param        {object} arrayLike
   @param        {number} [i]
@@ -764,12 +807,12 @@ exports.find = find;
 exports.findIndex = findIndex;
 exports.findLast = findLast;
 exports.findLastIndex = findLastIndex;
+exports.takeWhile = takeWhile;
+exports.dropWhile = dropWhile;
 exports.imap = imap;
 exports.ifilter = ifilter;
-
 exports.lastIndexOf = lastIndexOf;
 exports.indexOf = indexOf;
-
 exports.toArray = toArray;
 exports.reduce = reduce;
 exports.sum = sum;

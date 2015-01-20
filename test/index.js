@@ -1193,6 +1193,150 @@ describe("test iter module: ", function() {
       return { src : { val : { id : i % 2 ? i : null } } };
     } ), 'src.val.id', true ) ).to.deep.equal( [1, 3, 5, 7, 9] );
 
-  } );
-});
+  });
 
+
+  describe("function takeWhile", function() {
+
+    it("should takeWhile on an array", function() {
+
+      var results = underTest.takeWhile(arr, function (v) {
+        return v < 40;
+      });
+
+      expect(results).to.deep.equal([10, 20, 30]);
+
+      results = underTest.takeWhile(arr, function (v) {
+        return v < 100;
+      });
+
+      expect(results).to.deep.equal([10, 20, 30, 40, 50]);
+
+      results = underTest.takeWhile(arr, function (v) {
+        return v < 10;
+      });
+
+      expect(results).to.deep.equal([]);
+
+
+    });
+
+    it("should takeWhile on an object", function() {
+
+      var results = underTest.takeWhile(obj, function (v, k) {
+        return v < 40;
+      });
+
+      expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30});
+
+      results = underTest.takeWhile(obj, function (v, k) {
+        return v < 100;
+      });
+
+      expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30, forty: 40, fifty: 50});
+
+      results = underTest.takeWhile(obj, function (v, k) {
+        return v < 10;
+      });
+
+      expect(results).to.deep.equal({});
+
+    });
+
+    it("should takeWhile on an object with a next method", function() {
+
+      var results = underTest.takeWhile(gen, function (v, k) {
+        return v < 4;
+      });
+
+      expect(results).to.deep.equal([1, 2 ,3]);
+
+      results = underTest.takeWhile(gen, function (v, k) {
+        return v < 10;
+      });
+
+      expect(results).to.deep.equal([1, 2 ,3, 4, 5]);
+
+      results = underTest.takeWhile(gen, function (v, k) {
+        return v < 1;
+      });
+
+      expect(results).to.deep.equal([]);
+
+    });
+
+  });
+
+  describe("function dropWhile", function() {
+
+    it("should dropWhile on an array", function() {
+
+      var results = underTest.dropWhile(arr, function (v) {
+        return v < 40;
+      });
+
+      expect(results).to.deep.equal([40, 50]);
+
+      results = underTest.dropWhile(arr, function (v) {
+        return v < 100;
+      });
+
+      expect(results).to.deep.equal([]);
+
+      results = underTest.dropWhile(arr, function (v) {
+        return v < 10;
+      });
+
+      expect(results).to.deep.equal([10, 20, 30, 40, 50]);
+
+
+    });
+
+    it("should dropWhile on an object", function() {
+
+      var results = underTest.dropWhile(obj, function (v, k) {
+        return v < 40;
+      });
+
+      expect(results).to.deep.equal({forty: 40, fifty: 50});
+
+      results = underTest.dropWhile(obj, function (v, k) {
+        return v < 100;
+      });
+
+      expect(results).to.deep.equal({});
+
+      results = underTest.dropWhile(obj, function (v, k) {
+        return v < 10;
+      });
+
+      expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30, forty: 40, fifty: 50});
+
+    });
+
+    it("should dropWhile on an object with a next method", function() {
+
+      var results = underTest.dropWhile(gen, function (v, k) {
+        return v < 4;
+      });
+
+      expect(results).to.deep.equal([4, 5]);
+
+      results = underTest.dropWhile(gen, function (v, k) {
+        return v < 10;
+      });
+
+      expect(results).to.deep.equal([]);
+
+      results = underTest.dropWhile(gen, function (v, k) {
+        return v < 1;
+      });
+
+      expect(results).to.deep.equal([1, 2 ,3, 4, 5]);
+
+    });
+
+  });
+
+
+});
