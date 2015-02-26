@@ -1,14 +1,15 @@
-var assert = require("assert");
-var sinon = require("sinon");
-var underTest = require("../iter");
+import assert from 'assert';
+import sinon from 'sinon';
+import * as underTest from '../iter';
 
-var expect = require( 'chai' ).expect;
+import {expect} from 'chai';
 
-var arr;
-var obj;
-var gen;
-var fakes;
-var genString;
+let arr;
+let obj;
+let gen;
+let genString;
+let objSym;
+let fakes;
 
 describe("test iter module: ", function() {
 
@@ -25,26 +26,23 @@ describe("test iter module: ", function() {
       thirty: 30,
       forty: 40,
       fifty: 50
-    }
-    gen = function (six) {
-      var a = [1, 2, 3, 4, 5];
+    };
+
+    gen = function* (six) {
+      let a = [1, 2, 3, 4, 5];
       if (six) a.push(3);
-      var i = 0;
-      return {
-        next: function () {
-          return {
-            value: [a.shift(), i++],
-            done: !!(!a.length)
-          }
-        }
+      let i = 0;
+
+      while (a.length) {
+        yield a.shift();
       }
-    }
+    };
 
     genString = function (six) {
-      var a = {one: 1, two: 2, three: 3, four: 4, five: 5};
+      let a = {one: 1, two: 2, three: 3, four: 4, five: 5};
       if (six) a['six'] = 3;
-      var i = 0;
-      var keys = Object.keys(a);
+      let i = 0;
+      let keys = Object.keys(a);
       return {
         next: function () {
           return {
@@ -55,6 +53,10 @@ describe("test iter module: ", function() {
       }
     }
 
+
+    objSym = {
+      [Symbol.iterator]: gen
+    }
 
   });
 
@@ -70,43 +72,57 @@ describe("test iter module: ", function() {
 
   describe('function iterator', function () {
 
-    it('should return an iterable object from on an array', function () {
+    it('should return an iterable object from an array', function () {
 
-      var it = underTest.iterator(arr);
-      expect(it.next()).to.be.deep.equal({value: [10, 0], done: false});
-      expect(it.next()).to.be.deep.equal({value: [20, 1], done: false});
-      expect(it.next()).to.be.deep.equal({value: [30, 2], done: false});
-      expect(it.next()).to.be.deep.equal({value: [40, 3], done: false});
-      expect(it.next()).to.be.deep.equal({value: [50, 4], done: true});
-
+      let it = underTest.iterator(arr);
+      expect(it.next()).to.be.deep.equal({value: 10, done: false});
+      expect(it.next()).to.be.deep.equal({value: 20, done: false});
+      expect(it.next()).to.be.deep.equal({value: 30, done: false});
+      expect(it.next()).to.be.deep.equal({value: 40, done: false});
+      expect(it.next()).to.be.deep.equal({value: 50, done: false});
+      expect(it.next()).to.be.deep.equal({value: undefined, done: true});
     });
 
     it('should return an iterable object from on an object ', function () {
 
-      var it = underTest.iterator(obj);
-      expect(it.next()).to.be.deep.equal({value: [10, "ten"], done: false});
-      expect(it.next()).to.be.deep.equal({value: [20, "twenty"], done: false});
-      expect(it.next()).to.be.deep.equal({value: [30, "thirty"], done: false});
-      expect(it.next()).to.be.deep.equal({value: [40, "forty"], done: false});
-      expect(it.next()).to.be.deep.equal({value: [50, "fifty"], done: true});
+      let it = underTest.iterator(obj);
+      expect(it.next()).to.be.deep.equal({value: 10, done: false});
+      expect(it.next()).to.be.deep.equal({value: 20, done: false});
+      expect(it.next()).to.be.deep.equal({value: 30, done: false});
+      expect(it.next()).to.be.deep.equal({value: 40, done: false});
+      expect(it.next()).to.be.deep.equal({value: 50, done: false});
+      expect(it.next()).to.be.deep.equal({value: undefined, done: true});
 
     });
 
     it('should return the iterable object if it is already an iterarable object', function () {
 
-      var it = gen();
+      let it = gen();
       expect(it).to.be.equal(underTest.iterator(it));
 
     });
 
-    it('should return an iterable object from the return of a function', function () {
+    it('should return the iterable object if passed an object with an iterator', function () {
 
-      var it = underTest.iterator(gen);
-      expect(it.next()).to.be.deep.equal({value: [1, 0], done: false});
-      expect(it.next()).to.be.deep.equal({value: [2, 1], done: false});
-      expect(it.next()).to.be.deep.equal({value: [3, 2], done: false});
-      expect(it.next()).to.be.deep.equal({value: [4, 3], done: false});
-      expect(it.next()).to.be.deep.equal({value: [5, 4], done: true});
+      let it = underTest.iterator(objSym);
+      expect(it.next()).to.be.deep.equal({value: 1, done: false});
+      expect(it.next()).to.be.deep.equal({value: 2, done: false});
+      expect(it.next()).to.be.deep.equal({value: 3, done: false});
+      expect(it.next()).to.be.deep.equal({value: 4, done: false});
+      expect(it.next()).to.be.deep.equal({value: 5, done: false});
+      expect(it.next()).to.be.deep.equal({value: undefined, done: true});
+
+    });
+
+    it('should return an iterable object if passed a generator function', function () {
+
+      let it = underTest.iterator(gen);
+      expect(it.next()).to.be.deep.equal({value: 1, done: false});
+      expect(it.next()).to.be.deep.equal({value: 2, done: false});
+      expect(it.next()).to.be.deep.equal({value: 3, done: false});
+      expect(it.next()).to.be.deep.equal({value: 4, done: false});
+      expect(it.next()).to.be.deep.equal({value: 5, done: false});
+      expect(it.next()).to.be.deep.equal({value: undefined, done: true});
 
     });
 
@@ -114,11 +130,11 @@ describe("test iter module: ", function() {
   });
 
 
-  describe("function forEach", function() {
+  describe.only("function forEach", function() {
 
-    it("should iterate over on an array", function() {
+    it("should iterate over an array", function() {
 
-      var spy = sinon.spy();
+      let spy = sinon.spy();
       underTest.forEach(arr, spy);
 
       expect(5, spy.callCount);
@@ -137,16 +153,10 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should iterate over on an object", function() {
+    it("should iterate over an object", function() {
 
-      var spy = sinon.spy();
-      underTest.forEach({
-        ten: 10,
-        twenty: 20,
-        thirty: 30,
-        forty: 40,
-        fifty: 50
-      }, spy);
+      let spy = sinon.spy();
+      underTest.forEach(obj, spy);
 
       expect(5, spy.callCount);
 
@@ -164,10 +174,41 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should iterate over on an object with a next() method", function() {
+    it("should iterate over an object with a next() method", function() {
 
-      var spy = sinon.spy();
+      let spy = sinon.spy();
       underTest.forEach(gen(), spy);
+
+      expect(5, spy.callCount);
+
+      expect(1).to.be.equal(spy.args[0][0]);
+      expect(2).to.be.equal(spy.args[1][0]);
+      expect(3).to.be.equal(spy.args[2][0]);
+      expect(4).to.be.equal(spy.args[3][0]);
+      expect(5).to.be.equal(spy.args[4][0]);
+
+    });
+
+
+    it("should iterate over a function that returns a generator", function() {
+
+      let spy = sinon.spy();
+      underTest.forEach(gen, spy);
+
+      expect(5, spy.callCount);
+
+      expect(1).to.be.equal(spy.args[0][0]);
+      expect(2).to.be.equal(spy.args[1][0]);
+      expect(3).to.be.equal(spy.args[2][0]);
+      expect(4).to.be.equal(spy.args[3][0]);
+      expect(5).to.be.equal(spy.args[4][0]);
+
+    });
+
+    it("should iterate over an object with a Symbol.iterator function", function() {
+
+      let spy = sinon.spy();
+      underTest.forEach(objSym, spy);
 
       expect(5, spy.callCount);
 
@@ -182,8 +223,8 @@ describe("test iter module: ", function() {
 
     it("should delegate to Array.prototype.forEach", function() {
 
-      var spy = sinon.spy();
-      var forEachSpy = fakes.spy(Array.prototype, "forEach");
+      let spy = sinon.spy();
+      let forEachSpy = fakes.spy(Array.prototype, "forEach");
       underTest.forEach(arr, spy);
 
       expect(1, forEachSpy.callCount);
@@ -198,7 +239,7 @@ describe("test iter module: ", function() {
 
     it("should filter on an array", function() {
 
-      var results = underTest.filter(arr, function(value) {
+      let results = underTest.filter(arr, function(value) {
         return value < 30;
       });
 
@@ -209,7 +250,7 @@ describe("test iter module: ", function() {
 
     it("should filter on an object", function() {
 
-      var results = underTest.filter(obj, function(value) {
+      let results = underTest.filter(obj, function(value) {
         return value < 30;
       });
 
@@ -219,7 +260,7 @@ describe("test iter module: ", function() {
 
     it("should filter on an object with a next method", function() {
 
-      var results = underTest.filter(gen(), function(value) {
+      let results = underTest.filter(gen(), function(value) {
         return value < 3;
       });
 
@@ -229,7 +270,7 @@ describe("test iter module: ", function() {
 
     it("should filter on an object with a next method with string keys", function() {
 
-      var results = underTest.filter(genString(), function(value) {
+      let results = underTest.filter(genString(), function(value) {
         return value < 3;
       });
 
@@ -239,7 +280,7 @@ describe("test iter module: ", function() {
 
     it("should handle an empty object", function() {
 
-      var results = underTest.filter({}, function(value) {
+      let results = underTest.filter({}, function(value) {
         return value > 30;
       });
 
@@ -249,7 +290,7 @@ describe("test iter module: ", function() {
 
     it("should handle an empty array", function() {
 
-      var results = underTest.filter([], function(value) {
+      let results = underTest.filter([], function(value) {
         return value > 30;
       });
 
@@ -264,7 +305,7 @@ describe("test iter module: ", function() {
 
     it("should map on an array", function() {
 
-      var results = underTest.map(arr, function(value) {
+      let results = underTest.map(arr, function(value) {
         return value * 2;
       });
 
@@ -275,7 +316,7 @@ describe("test iter module: ", function() {
 
     it("should map on an object", function() {
 
-      var results = underTest.map(obj, function(value) {
+      let results = underTest.map(obj, function(value) {
         return value * 2;
       });
 
@@ -286,7 +327,7 @@ describe("test iter module: ", function() {
 
     it("should map on an object with a next method", function() {
 
-     var results = underTest.map(gen(), function(value) {
+     let results = underTest.map(gen(), function(value) {
         return value * 2;
       });
 
@@ -296,7 +337,7 @@ describe("test iter module: ", function() {
 
     it("should map on an object with a next method with string keys", function() {
 
-     var results = underTest.map(genString(), function(value) {
+     let results = underTest.map(genString(), function(value) {
         return value * 2;
       });
 
@@ -306,7 +347,7 @@ describe("test iter module: ", function() {
 
     it("should handle an empty object", function() {
 
-      var results = underTest.map({}, function(value) {
+      let results = underTest.map({}, function(value) {
         return value > 30;
       });
 
@@ -316,7 +357,7 @@ describe("test iter module: ", function() {
 
     it("should handle an empty array", function() {
 
-      var results = underTest.map([], function(value) {
+      let results = underTest.map([], function(value) {
         return value > 30;
       });
 
@@ -329,7 +370,7 @@ describe("test iter module: ", function() {
 
     it("should some on an array", function() {
 
-      var results = underTest.some(arr, function(value) {
+      let results = underTest.some(arr, function(value) {
         return value > 30;
       });
 
@@ -345,7 +386,7 @@ describe("test iter module: ", function() {
 
     it("should some on an object", function() {
 
-      var results = underTest.some(obj, function(value) {
+      let results = underTest.some(obj, function(value) {
         return value > 30;
       });
 
@@ -361,7 +402,7 @@ describe("test iter module: ", function() {
 
     it("should some on an object with a next method", function() {
 
-      var results = underTest.some(gen(), function(value) {
+      let results = underTest.some(gen(), function(value) {
         return value > 3;
       });
 
@@ -382,7 +423,7 @@ describe("test iter module: ", function() {
 
     it("should every on an array", function() {
 
-      var results = underTest.every(arr, function(value) {
+      let results = underTest.every(arr, function(value) {
         return value > 0;
       });
 
@@ -398,7 +439,7 @@ describe("test iter module: ", function() {
 
     it("should every on an object", function() {
 
-      var results = underTest.every(obj, function(value) {
+      let results = underTest.every(obj, function(value) {
         return value > 0;
       });
 
@@ -414,7 +455,7 @@ describe("test iter module: ", function() {
 
     it("should every on an object with a next method", function() {
 
-      var results = underTest.every(gen(), function(value) {
+      let results = underTest.every(gen(), function(value) {
         return value > 0;
       });
 
@@ -437,7 +478,7 @@ describe("test iter module: ", function() {
 
       arr.push(30)
 
-      var results = underTest.indexOf(arr, 30);
+      let results = underTest.indexOf(arr, 30);
 
       expect(results).to.be.equal(2);
 
@@ -452,7 +493,7 @@ describe("test iter module: ", function() {
 
       obj['sixty'] = 30;
 
-      var results = underTest.indexOf(obj, 30);
+      let results = underTest.indexOf(obj, 30);
 
       expect(results).to.be.equal('thirty');
 
@@ -465,7 +506,7 @@ describe("test iter module: ", function() {
 
     it("should indexOf on an object with next method", function() {
 
-      var results = underTest.indexOf(gen(true), 3);
+      let results = underTest.indexOf(gen(true), 3);
 
       expect(results).to.be.equal(2);
 
@@ -478,7 +519,7 @@ describe("test iter module: ", function() {
 
     it("should indexOf on an object with next method with a string key", function() {
 
-      var results = underTest.indexOf(genString(true), 3);
+      let results = underTest.indexOf(genString(true), 3);
 
       expect(results).to.be.equal('three');
 
@@ -496,7 +537,7 @@ describe("test iter module: ", function() {
 
     it("should find on an array", function() {
 
-      var results = underTest.find(arr, function(value) {
+      let results = underTest.find(arr, function(value) {
         return value > 30;
       });
 
@@ -512,7 +553,7 @@ describe("test iter module: ", function() {
 
     it("should find on an object", function() {
 
-      var results = underTest.find(obj, function(value) {
+      let results = underTest.find(obj, function(value) {
         return value > 30;
       });
 
@@ -528,7 +569,7 @@ describe("test iter module: ", function() {
 
     it("should find on an object with a next method", function() {
 
-      var results = underTest.find(gen(), function(value) {
+      let results = underTest.find(gen(), function(value) {
         return value > 3;
       });
 
@@ -544,7 +585,7 @@ describe("test iter module: ", function() {
 
     it("should handle an empty object", function() {
 
-      var results = underTest.find({}, function(value) {
+      let results = underTest.find({}, function(value) {
         return value > 30;
       });
 
@@ -554,7 +595,7 @@ describe("test iter module: ", function() {
 
     it("should handle an empty array", function() {
 
-      var results = underTest.find([], function(value) {
+      let results = underTest.find([], function(value) {
         return value > 30;
       });
 
@@ -570,7 +611,7 @@ describe("test iter module: ", function() {
 
     it("should findIndex on an array", function() {
 
-      var results = underTest.findIndex(arr, function(value) {
+      let results = underTest.findIndex(arr, function(value) {
         return value > 30;
       });
 
@@ -586,7 +627,7 @@ describe("test iter module: ", function() {
 
     it("should findIndex on an object", function() {
 
-      var results = underTest.findIndex(obj, function(value) {
+      let results = underTest.findIndex(obj, function(value) {
         return value > 30;
       });
 
@@ -603,7 +644,7 @@ describe("test iter module: ", function() {
 
     it("should findIndex on an object with next method", function() {
 
-      var results = underTest.findIndex(gen(true), function(value) {
+      let results = underTest.findIndex(gen(true), function(value) {
         return value > 2;
       });
 
@@ -620,7 +661,7 @@ describe("test iter module: ", function() {
 
     it("should findIndex on an object with next method with a string key", function() {
 
-      var results = underTest.findIndex(genString(true), function(value) {
+      let results = underTest.findIndex(genString(true), function(value) {
         return value > 2;
       });
 
@@ -645,7 +686,7 @@ describe("test iter module: ", function() {
 
       arr.push(30)
 
-      var results = underTest.lastIndexOf(arr, 30);
+      let results = underTest.lastIndexOf(arr, 30);
 
       expect(results).to.be.equal(5);
 
@@ -660,7 +701,7 @@ describe("test iter module: ", function() {
 
       obj['sixty'] = 30;
 
-      var results = underTest.lastIndexOf(obj, 30);
+      let results = underTest.lastIndexOf(obj, 30);
 
       expect(results).to.be.equal('sixty');
 
@@ -672,7 +713,7 @@ describe("test iter module: ", function() {
 
     it("should lastIndexOf on an object with next method", function() {
 
-      var results = underTest.lastIndexOf(gen(true), 3);
+      let results = underTest.lastIndexOf(gen(true), 3);
 
       expect(results).to.be.equal(5);
 
@@ -684,7 +725,7 @@ describe("test iter module: ", function() {
 
     it("should lastIndexOf on an object with next method with a string", function() {
 
-      var results = underTest.lastIndexOf(genString(true), 3);
+      let results = underTest.lastIndexOf(genString(true), 3);
 
       expect(results).to.be.equal('six');
 
@@ -702,7 +743,7 @@ describe("test iter module: ", function() {
 
     it("should find on an array", function() {
 
-      var results = underTest.findLast(arr, function(value) {
+      let results = underTest.findLast(arr, function(value) {
         return value > 30;
       });
 
@@ -718,7 +759,7 @@ describe("test iter module: ", function() {
 
     it("should findLast on an object", function() {
 
-      var results = underTest.findLast(obj, function(value) {
+      let results = underTest.findLast(obj, function(value) {
         return value > 30;
       });
 
@@ -734,7 +775,7 @@ describe("test iter module: ", function() {
 
     it("should findLast on an object with a next method", function() {
 
-      var results = underTest.findLast(gen(), function(value) {
+      let results = underTest.findLast(gen(), function(value) {
         return value > 3;
       });
 
@@ -754,7 +795,7 @@ describe("test iter module: ", function() {
 
     it("should find on an array", function() {
 
-      var results = underTest.findLastIndex(arr, function(value) {
+      let results = underTest.findLastIndex(arr, function(value) {
         return value > 30;
       });
 
@@ -770,7 +811,7 @@ describe("test iter module: ", function() {
 
     it("should findLastIndex on an object", function() {
 
-      var results = underTest.findLastIndex(obj, function(value) {
+      let results = underTest.findLastIndex(obj, function(value) {
         return value > 30;
       });
 
@@ -786,7 +827,7 @@ describe("test iter module: ", function() {
 
     it("should findLastIndex on an object with next method", function() {
 
-      var results = underTest.findLastIndex(gen(true), function(value) {
+      let results = underTest.findLastIndex(gen(true), function(value) {
         return value > 2;
       });
 
@@ -803,7 +844,7 @@ describe("test iter module: ", function() {
 
     it("should findLastIndex on an object with next method with a string key", function() {
 
-      var results = underTest.findLastIndex(genString(true), function(value, k) {
+      let results = underTest.findLastIndex(genString(true), function(value, k) {
         return value === 3;
       });
 
@@ -825,7 +866,7 @@ describe("test iter module: ", function() {
 
     it("should reduce on an array", function() {
 
-      var results = underTest.reduce(arr, function(acc, value) {
+      let results = underTest.reduce(arr, function(acc, value) {
         return acc + value;
       }, 10);
 
@@ -841,7 +882,7 @@ describe("test iter module: ", function() {
 
     it("should an reduce on an object", function() {
 
-      var results = underTest.reduce(obj, function(acc, value, key) {
+      let results = underTest.reduce(obj, function(acc, value, key) {
         return acc + value;
       }, 10);
 
@@ -857,7 +898,7 @@ describe("test iter module: ", function() {
 
     it("should an reduce on an object with a next method", function() {
 
-      var results = underTest.reduce(gen, function(acc, value, key) {
+      let results = underTest.reduce(gen, function(acc, value, key) {
         return acc + value;
       }, 10);
 
@@ -874,7 +915,7 @@ describe("test iter module: ", function() {
 
     it("should pass the accumulator correctly", function() {
 
-      var spy = fakes.spy();
+      let spy = fakes.spy();
 
       underTest.reduce(obj, spy, 0);
 
@@ -884,7 +925,7 @@ describe("test iter module: ", function() {
 
     it("should pass the accumulator correctly", function() {
 
-      var spy = fakes.spy();
+      let spy = fakes.spy();
 
       underTest.reduce(obj, spy);
 
@@ -894,7 +935,7 @@ describe("test iter module: ", function() {
 
     it("should handle an empty object", function() {
 
-      var results = underTest.reduce({}, function(acc, value) {
+      let results = underTest.reduce({}, function(acc, value) {
         return value > 30;
       }, 10);
 
@@ -904,7 +945,7 @@ describe("test iter module: ", function() {
 
     it("should handle an empty array", function() {
 
-      var results = underTest.reduce([], function(acc, value) {
+      let results = underTest.reduce([], function(acc, value) {
         return value > 30;
       }, 10);
 
@@ -919,7 +960,7 @@ describe("test iter module: ", function() {
 
     it("should sum on an array", function() {
 
-      var results = underTest.sum(arr, 10);
+      let results = underTest.sum(arr, 10);
 
       expect(results).to.be.equal(160);
 
@@ -931,7 +972,7 @@ describe("test iter module: ", function() {
 
     it("should an reduce on an object", function() {
 
-      var results = underTest.sum(obj, 10);
+      let results = underTest.sum(obj, 10);
 
       expect(results).to.be.equal(160);
 
@@ -943,7 +984,7 @@ describe("test iter module: ", function() {
 
     it("should an reduce on an object with a next method", function() {
 
-      var results = underTest.sum(gen(), 10);
+      let results = underTest.sum(gen(), 10);
 
       expect(results).to.be.equal(25);
 
@@ -959,7 +1000,7 @@ describe("test iter module: ", function() {
 
     it('should zip a bunch of arrays', function () {
 
-      var results = underTest.zip(arr, arr, arr);
+      let results = underTest.zip(arr, arr, arr);
 
       expect(results).to.deep.equal([[10, 10, 10], [20, 20, 20], [30, 30, 30], [40, 40, 40], [50, 50, 50]]);
 
@@ -967,7 +1008,7 @@ describe("test iter module: ", function() {
 
     it('should zip a bunch of objects', function () {
 
-      var results = underTest.zip(obj, obj, obj);
+      let results = underTest.zip(obj, obj, obj);
 
       expect(results).to.deep.equal({ten: [10, 10, 10], twenty: [20, 20, 20], thirty: [30, 30, 30], forty: [40, 40, 40], fifty: [50, 50, 50]});
 
@@ -975,7 +1016,7 @@ describe("test iter module: ", function() {
 
     it('should zip a bunch of generators', function () {
 
-      var results = underTest.zip(gen(), gen(), gen());
+      let results = underTest.zip(gen(), gen(), gen());
 
       expect(results).to.deep.equal([[1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4], [5, 5, 5]]);
 
@@ -983,7 +1024,7 @@ describe("test iter module: ", function() {
 
     it('should zip a bunch of generators with string keys', function () {
 
-      var results = underTest.zip(genString(), genString(), genString());
+      let results = underTest.zip(genString(), genString(), genString());
 
       expect(results).to.deep.equal({one: [1, 1, 1], two: [2, 2, 2], three: [3, 3, 3], four: [4, 4, 4], five: [5, 5, 5]});
 
@@ -996,7 +1037,7 @@ describe("test iter module: ", function() {
 
     it('should create an iterator that iterates over all items', function () {
 
-      var c = underTest.chain([arr, obj, gen]);
+      let c = underTest.chain([arr, obj, gen]);
 
       expect(c.next()).to.be.deep.equal({value:[10, 0], done: false});
       expect(c.next()).to.be.deep.equal({value:[20, 1], done: false});
@@ -1023,44 +1064,46 @@ describe("test iter module: ", function() {
 
     it('should create an iterator that maps over all items of an array', function () {
 
-      var c = underTest.imap(arr, function (v) {
+      let c = underTest.imap(arr, function (v) {
         return v * 2;
       });
 
-      expect(c.next()).to.be.deep.equal({value: [20, 0], done: false});
-      expect(c.next()).to.be.deep.equal({value: [40, 1], done: false});
-      expect(c.next()).to.be.deep.equal({value: [60, 2], done: false});
-      expect(c.next()).to.be.deep.equal({value: [80, 3], done: false});
-      expect(c.next()).to.be.deep.equal({value: [100, 4], done: true});
-
+      expect(c.next()).to.be.deep.equal({value: 20, done: false});
+      expect(c.next()).to.be.deep.equal({value: 40, done: false});
+      expect(c.next()).to.be.deep.equal({value: 60, done: false});
+      expect(c.next()).to.be.deep.equal({value: 80, done: false});
+      expect(c.next()).to.be.deep.equal({value: 100, done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
     });
 
     it('should create an iterator that maps over all items of an object', function () {
 
-      var c = underTest.imap(obj, function (v) {
+      let c = underTest.imap(obj, function (v) {
         return v * 2;
       });
 
-      expect(c.next()).to.be.deep.equal({value: [20, "ten"], done: false});
-      expect(c.next()).to.be.deep.equal({value: [40, "twenty"], done: false});
-      expect(c.next()).to.be.deep.equal({value: [60, "thirty"], done: false});
-      expect(c.next()).to.be.deep.equal({value: [80, "forty"], done: false});
-      expect(c.next()).to.be.deep.equal({value: [100, "fifty"], done: true});
+      expect(c.next()).to.be.deep.equal({value: 20, done: false});
+      expect(c.next()).to.be.deep.equal({value: 40, done: false});
+      expect(c.next()).to.be.deep.equal({value: 60, done: false});
+      expect(c.next()).to.be.deep.equal({value: 80, done: false});
+      expect(c.next()).to.be.deep.equal({value: 100, done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
     });
 
 
     it('should create an iterator that maps over all items of an iterator', function () {
 
-      var c = underTest.imap(gen(), function (v) {
+      let c = underTest.imap(gen(), function (v) {
         return v * 2;
       });
 
-      expect(c.next()).to.be.deep.equal({value: [2, 0], done: false});
-      expect(c.next()).to.be.deep.equal({value: [4, 1], done: false});
-      expect(c.next()).to.be.deep.equal({value: [6, 2], done: false});
-      expect(c.next()).to.be.deep.equal({value: [8, 3], done: false});
-      expect(c.next()).to.be.deep.equal({value: [10, 4], done: true});
+      expect(c.next()).to.be.deep.equal({value: 2, done: false});
+      expect(c.next()).to.be.deep.equal({value: 4, done: false});
+      expect(c.next()).to.be.deep.equal({value: 6, done: false});
+      expect(c.next()).to.be.deep.equal({value: 8, done: false});
+      expect(c.next()).to.be.deep.equal({value: 10, done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
     });
 
@@ -1070,7 +1113,7 @@ describe("test iter module: ", function() {
 
     it('should create an iterator that filters over all items of an array', function () {
 
-      var c = underTest.ifilter(arr, function (v) {
+      let c = underTest.ifilter(arr, function (v) {
         return v > 25;
       });
 
@@ -1096,7 +1139,7 @@ describe("test iter module: ", function() {
 
     it('should create an iterator that filters over all items of an object', function () {
 
-      var c = underTest.ifilter(obj, function (v) {
+      let c = underTest.ifilter(obj, function (v) {
         return v > 25;
       });
 
@@ -1123,7 +1166,7 @@ describe("test iter module: ", function() {
 
     it('should create an iterator that filters over all items of an iterator', function () {
 
-      var c = underTest.ifilter(gen(), function (v) {
+      let c = underTest.ifilter(gen(), function (v) {
         return v > 2;
       });
 
@@ -1158,7 +1201,7 @@ describe("test iter module: ", function() {
 
 
   it( 'function pluck', function() {
-    var data = [{ data : { value : 'foo' } }, { data : { value : 'bar' } }, {}, { value : 'blim' }, { data : { value : 'blam' } }];
+    let data = [{ data : { value : 'foo' } }, { data : { value : 'bar' } }, {}, { value : 'blim' }, { data : { value : 'blam' } }];
     expect( underTest.pluck( data, 'data.value' ) ).to.deep.equal( ["foo", "bar", undefined, undefined, "blam"] );
 
     expect( underTest.pluck( data, 'data.value', true ) ).to.deep.equal( ["foo", "bar", "blam"] );
@@ -1200,7 +1243,7 @@ describe("test iter module: ", function() {
 
     it("should takeWhile on an array", function() {
 
-      var results = underTest.takeWhile(arr, function (v) {
+      let results = underTest.takeWhile(arr, function (v) {
         return v < 40;
       });
 
@@ -1223,7 +1266,7 @@ describe("test iter module: ", function() {
 
     it("should takeWhile on an object", function() {
 
-      var results = underTest.takeWhile(obj, function (v, k) {
+      let results = underTest.takeWhile(obj, function (v, k) {
         return v < 40;
       });
 
@@ -1245,7 +1288,7 @@ describe("test iter module: ", function() {
 
     it("should takeWhile on an object with a next method", function() {
 
-      var results = underTest.takeWhile(gen, function (v, k) {
+      let results = underTest.takeWhile(gen, function (v, k) {
         return v < 4;
       });
 
@@ -1271,7 +1314,7 @@ describe("test iter module: ", function() {
 
     it("should dropWhile on an array", function() {
 
-      var results = underTest.dropWhile(arr, function (v) {
+      let results = underTest.dropWhile(arr, function (v) {
         return v < 40;
       });
 
@@ -1294,7 +1337,7 @@ describe("test iter module: ", function() {
 
     it("should dropWhile on an object", function() {
 
-      var results = underTest.dropWhile(obj, function (v, k) {
+      let results = underTest.dropWhile(obj, function (v, k) {
         return v < 40;
       });
 
@@ -1316,7 +1359,7 @@ describe("test iter module: ", function() {
 
     it("should dropWhile on an object with a next method", function() {
 
-      var results = underTest.dropWhile(gen, function (v, k) {
+      let results = underTest.dropWhile(gen, function (v, k) {
         return v < 4;
       });
 

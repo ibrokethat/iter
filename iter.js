@@ -3,17 +3,32 @@
 */
 "use strict";
 
-var StopIteration = new Error();
 
+/**
+  @description  returns true if a === b
+  @param        {a} object
+  @param        {b} function
+  @return       {boolean}
+*/
+function eq (a, b) {
+
+  return a === b;
+}
+
+function negate (fn, v, k) {
+
+  return !fn(v, k);
+}
 
 function isArrayLike (o) {
-  return typeof o.length === 'number';
+
+  return typeof o !== 'function' && typeof o.length === 'number';
 }
 
 
 function returns (o) {
 
-  var r, set;
+  let r, set;
 
   function setArray(v) {
     r.push(v);
@@ -21,23 +36,24 @@ function returns (o) {
   function setObject (v, k) {
     r[k] = v;
   };
-  function setObjectOrArray (v, k) {
-    if (typeof k === 'number') {
-      r = r || [];
-      setArray(v);
-    }
-    else {
-      r = r || {};
-      setObject(v, k);
-    }
-  };
+  // function setObjectOrArray (v, k) {
+  //   if (typeof k === 'number') {
+  //     r = r || [];
+  //     setArray(v);
+  //   }
+  //   else {
+  //     r = r || {};
+  //     setObject(v, k);
+  //   }
+  // };
 
-  if (isArrayLike(o)) {
+  if (isIterable(o) || isArrayLike(o)) {
     r = [];
     set = setArray;
   }
   else {
-    set = setObjectOrArray;
+    r = {};
+    set = setObject;
   }
 
   return {
@@ -49,67 +65,113 @@ function returns (o) {
 }
 
 
+function isIterable (o) {
+
+  return (typeof o === 'function' || typeof o.next === 'function' || typeof o[Symbol.iterator] === 'function');
+}
+
+
+let StopIteration = new Error();
+
+
 
 /**
   @description  creates an iterable object from another object
   @param        {object} obect
   @return       {iterable}
 */
-function iterator (object) {
+export function iterator (object) {
 
-  var o = typeof object === 'function' ? object() : object;
+  let o = typeof object === 'function' ? object() : object;
 
   switch (true) {
 
-    //  is array like
-    case isArrayLike(o):
+    //  fall through on purpose here
+    case typeof o[Symbol.iterator] === 'function':
 
-      var i = 0;
-      var len = o.length;
+      o = o[Symbol.iterator]();
 
-      return {
-        next: function () {
-          return {
-            value: [o[i], i++],
-            done: i === len ? true : false
-          }
-        }
-      }
-
-    //  iterate
     case (typeof o.next === 'function'):
 
       return o;
 
-    //  is obj with keys
     default:
 
-      var i = 0;
-      var keys = Object.keys(o);
-      var len = keys.length;
+      return (function* () {
 
-      return {
-        next: function () {
-          return {
-            value: [o[keys[i]], keys[i++]],
-            done: i === len ? true : false
-          };
+        let i = 0;
+        let keys = Object.keys(o);
+        let len = keys.length;
+
+        while (i < len) {
+
+          yield o[keys[i++]];
         }
-      }
+
+      })();
 
   }
+
 }
+
+// export function iterator (object) {
+
+//   let o = typeof object === 'function' ? object() : object;
+//   let i;
+//   let len;
+
+//   switch (true) {
+
+//     //  is array like
+//     case isArrayLike(o):
+
+//       i = 0;
+//       len = o.length;
+
+//       return {
+//         next: function () {
+//           return {
+//             value: [o[i], i++],
+//             done: i === len ? true : false
+//           }
+//         }
+//       }
+
+//     //  iterate
+//     case (typeof o.next === 'function'):
+
+//       return o;
+
+//     //  is obj with keys
+//     default:
+
+//       i = 0;
+//       let keys = Object.keys(o);
+//       len = keys.length;
+
+//       return {
+//         next: function () {
+//           return {
+//             value: [o[keys[i]], keys[i++]],
+//             done: i === len ? true : false
+//           };
+//         }
+//       }
+
+//   }
+// }
+
 
 /**
   @descrption   applies a function to each item in an object
                 after selecting most appropriate method to perform the iteration
-  @param        {object} object
-  @param        {func} function
+  @param        {o} object
+  @param        {fn} function
 */
 
-function forEach (object, fn) {
+export function forEach (object, fn) {
 
-  var o = typeof object === 'function' ? object() : object;
+  let o = typeof object === 'function' ? object() : object;
 
   try {
 
@@ -124,21 +186,29 @@ function forEach (object, fn) {
       //  is array like
       case isArrayLike(o):
 
-        var i = -1;
-        var length = o.length;
+        let i = -1;
+        let length = o.length;
         while (++i < length) {
           fn(o[i], i);
         }
         break;
 
-      //  iterateor protocol
+      //  iterator object
       case (typeof o.next === 'function'):
 
-        var data = {};
+        let data = {};
 
         while (!data.done) {
           data = o.next();
-          fn(data.value[0], data.value[1]);
+          fn(data.value);
+        }
+        break;
+
+      //  iterator protocol
+      case (typeof o[Symbol.iterator] === 'function'):
+
+        for (let v of o) {
+          fn(v);
         }
         break;
 
@@ -167,15 +237,15 @@ function forEach (object, fn) {
   @descrption   calls a function on each item in an object and returns the item if 'true'
   @param        {o} object
   @param        {func} function
-  @param        {object} [scope]
 */
-function filter (o, fn) {
+export function filter (o, fn) {
 
   if (typeof o.filter === 'function') {
     return o.filter(fn);
   }
 
-  var r = returns(o);
+  let r = returns(o);
+
   forEach(o, function (v, k) {
     if (fn(v, k)) {
       r.set(v, k);
@@ -189,10 +259,9 @@ function filter (o, fn) {
   @descrption   calls a function on each item in an object and returns the result
   @param        {o} object
   @param        {func} function
-  @param        {object} [scope]
   @return       {object|array}
 */
-function map (o, fn) {
+export function map (o, fn) {
 
   if (arguments.length === 2) {
 
@@ -200,7 +269,7 @@ function map (o, fn) {
       return o.map(fn);
     }
 
-    var r = returns(o);
+    let r = returns(o);
     forEach(o, function (v, k) {
       r.set(fn(v, k), k);
     });
@@ -209,20 +278,20 @@ function map (o, fn) {
   }
   else {
 
-    var args = toArray(arguments);
+    let args = toArray(arguments);
     args.pop();
-    var r = returns(args[0]);
+    let r = returns(args[0]);
 
     if (typeof args[0].next === 'function') {
 
-      var l = args.length;
-      var done = 0;
-      var i = 0;
+      let l = args.length;
+      let done = 0;
+      let i = 0;
 
-      var data;
-      var value;
-      var key;
-      var values = [];
+      let data;
+      let value;
+      let key;
+      let values = [];
 
       while (i < l) {
 
@@ -250,8 +319,8 @@ function map (o, fn) {
     }
     else {
 
-      var longest = (function (args) {
-        var l = 0;
+      let longest = (function (args) {
+        let l = 0;
         reduce(args, function (acc, arg, i) {
 
           if (arg > acc) {
@@ -265,8 +334,8 @@ function map (o, fn) {
 
       forEach(args[longest], function (v, k) {
 
-        var values = [];
-        var i = 0;
+        let values = [];
+        let i = 0;
         while (i++ < args.length) {
           values.push(args[i][k]);
         }
@@ -282,24 +351,9 @@ function map (o, fn) {
 
 
 
-/**
-  @description  returns true if a === b
-  @param        {a} object
-  @param        {b} function
-  @return       {boolean}
-*/
-function eq (a, b) {
-  return a === b;
-}
+export function first (o, fn) {
 
-function negate (fn, v, k) {
-  return !fn(v, k);
-}
-
-
-
-function first (o, fn) {
-  var r;
+  let r;
   forEach(o, function (v, k) {
     if (fn(v, k)) {
       r = [v, k];
@@ -310,8 +364,9 @@ function first (o, fn) {
 }
 
 
-function last (o, fn) {
-  var r;
+export function last (o, fn) {
+
+  let r;
   forEach(o, function (v, k) {
     if (fn(v, k)) {
       r = [v, k];
@@ -331,7 +386,8 @@ function last (o, fn) {
   @param        {object} [scope]
   @return       {boolean}
 */
-function some (o, fn) {
+export function some (o, fn) {
+
   if (typeof o.some === 'function') {
     return o.some(fn);
   }
@@ -348,7 +404,7 @@ function some (o, fn) {
   @param        {object} [scope]
   @return       {boolean}
 */
-function every (o, fn) {
+export function every (o, fn) {
 
   if (typeof o.every === 'function') {
     return o.every(fn);
@@ -365,13 +421,13 @@ function every (o, fn) {
   @param        {any} val
   @return       {int|string}
 */
-function indexOf (o, el) {
+export function indexOf (o, el) {
 
   if (typeof o.indexOf === 'function') {
     return o.indexOf(el);
   }
 
-  var r = first(o, eq.bind(null, el));
+  let r = first(o, eq.bind(null, el));
   return r ? r[1] : -1;
 }
 
@@ -383,13 +439,13 @@ function indexOf (o, el) {
   @param        {any} val
   @return       {int|string}
 */
-function findIndex (o, fn) {
+export function findIndex (o, fn) {
 
   if (typeof o.findIndex === 'function') {
     return o.findIndex(fn);
   }
 
-  var r = first(o, fn);
+  let r = first(o, fn);
   return r ? r[1] : -1;
 }
 
@@ -400,13 +456,13 @@ function findIndex (o, fn) {
   @param        {any} val
   @return       {int|string}
 */
-function find (o, fn) {
+export function find (o, fn) {
 
   if (typeof o.find === 'function') {
     return o.find(fn);
   }
 
-  var r = first(o, fn);
+  let r = first(o, fn);
   return r ? r[0] : undefined;
 }
 
@@ -417,13 +473,13 @@ function find (o, fn) {
   @param        {any} val
   @return       {int|string}
 */
-function lastIndexOf (o, el) {
+export function lastIndexOf (o, el) {
 
   if (typeof o.lastIndexOf === 'function') {
     return o.lastIndexOf(el);
   }
 
-  var r = last(o, eq.bind(null, el));
+  let r = last(o, eq.bind(null, el));
   return r ? r[1] : -1;
 }
 
@@ -433,9 +489,9 @@ function lastIndexOf (o, el) {
   @param        {any} val
   @return       {int|string}
 */
-function findLastIndex (o, fn) {
+export function findLastIndex (o, fn) {
 
-  var r = last(o, fn);
+  let r = last(o, fn);
   return r ? r[1] : -1;
 }
 
@@ -447,9 +503,9 @@ function findLastIndex (o, fn) {
   @param        {any} val
   @return       {int|string}
 */
-function findLast (o, fn) {
+export function findLast (o, fn) {
 
-  var r = last(o, fn);
+  let r = last(o, fn);
   return r ? r[0] : undefined;
 }
 
@@ -460,9 +516,9 @@ function findLast (o, fn) {
   @param        {fn} funtion
   @return       {int|string}
 */
-function takeWhile (o, fn) {
+export function takeWhile (o, fn) {
 
-  var r = returns(o);
+  let r = returns(o);
   forEach(o, function (v, k) {
     if (fn(v, k)) {
       r.set(v, k);
@@ -481,10 +537,10 @@ function takeWhile (o, fn) {
   @param        {fn} function
   @return       {int|string}
 */
-function dropWhile (o, fn) {
+export function dropWhile (o, fn) {
 
-  var r = returns(o);
-  var take = false;
+  let r = returns(o);
+  let take = false;
   forEach(o, function (v, k) {
 
     take = take || !fn(v, k);
@@ -503,7 +559,7 @@ function dropWhile (o, fn) {
   @param        {number} [i]
   @return       {array}
 */
-function toArray(arrayLike, i) {
+export function toArray(arrayLike, i) {
 
   return Array.prototype.slice.call(arrayLike, i || 0);
 
@@ -519,9 +575,10 @@ function toArray(arrayLike, i) {
   @param        {function} func
   @return       {any}
 */
-function reduce (o, fn, acc){
+export function reduce (o, fn, acc){
 
-  var noAcc = typeof acc === 'undefined';
+  let noAcc = typeof acc === 'undefined';
+  let iterable;
 
   if(typeof o.reduce === 'function') {
 
@@ -530,8 +587,8 @@ function reduce (o, fn, acc){
 
   if (noAcc) {
 
-    var iterable = iterator(o);
-    var r = iterable.next();
+    iterable = iterator(o);
+    let r = iterable.next();
 
     if (r.done) {
       throw new TypeError("reduce() of sequence with no initial value");
@@ -542,7 +599,7 @@ function reduce (o, fn, acc){
 
   }
   else {
-    var iterable = o;
+    iterable = o;
   }
 
   forEach(iterable, function(value, key){
@@ -561,11 +618,12 @@ function reduce (o, fn, acc){
   @param        {any} [arg1, arg2, ..., argN]
   @return       {array}
 */
-function invoke (items, method) {
-  var args = Array.prototype.slice.call(arguments, 2);
-  var i = -1;
-  var l = Array.isArray(items) ? items.length : 0;
-  var res = [];
+export function invoke (items, method) {
+
+  let args = Array.prototype.slice.call(arguments, 2);
+  let i = -1;
+  let l = Array.isArray(items) ? items.length : 0;
+  let res = [];
 
   while (++i < l) {
     res.push(items[i][method].apply(items[i], args));
@@ -583,20 +641,23 @@ function invoke (items, method) {
   @param        {boolean} [only_existing]
   @return       {array}
 */
-function pluck(items, key, only_existing) {
+export function pluck(items, key, only_existing) {
 
   only_existing = only_existing === true;
 
-  var U,
+  let U,
     i   = -1,
     l   = Array.isArray( items ) ? items.length : 0,
     res = [],
     val;
 
-  if ( key.indexOf( '.' ) > -1 )
+  if ( key.indexOf( '.' ) > -1 ) {
+
     return reduce( key.split( '.' ), function( v, k ) {
       return pluck( v, k, only_existing );
-    }, items );
+    }, items);
+
+  }
 
   while ( ++i < l ) {
     val = key in Object( items[i] ) ? items[i][key] : U;
@@ -615,7 +676,7 @@ function pluck(items, key, only_existing) {
   @param        {any} [ret]
   @return       {number}
 */
-function sum (o, acc) {
+export function sum (o, acc) {
   return reduce(o, function(acc, a) {
     return acc + a;
   }, acc);
@@ -627,16 +688,16 @@ function sum (o, acc) {
   todo - map over the longest arg
        - throw if args are not the same
 */
-function zip () {
+export function zip () {
 
 
-  var args = arguments;
-  var r = returns(args[0]);
+  let args = arguments;
+  let r = returns(args[0]);
 
   forEach(args[0], function (v, k) {
 
-    var values = [v];
-    var i = 0;
+    let values = [v];
+    let i = 0;
     while (++i < args.length) {
       values.push(typeof args[i].next === 'function' ? args[i].next().value[0] : args[i][k]);
     }
@@ -647,8 +708,8 @@ function zip () {
 }
 
 
-// var zip = map(function () {
-//   var args = toArray(arguments);
+// let zip = map(function () {
+//   let args = toArray(arguments);
 //   args.pop();
 //   return args;
 // });
@@ -658,19 +719,19 @@ function zip () {
   @param        {array} args
   @return       {iterable}
 */
-function chain (args) {
+export function chain (args) {
 
   if(args.length === 1) {
     return iterator(args[0]);
   }
 
-  var iterables = map(args, iterator);
+  let iterables = map(args, iterator);
 
   return {
 
     next: function() {
 
-      var data = iterables[0].next();
+      let data = iterables[0].next();
 
       if (!data.done) {
         return data;
@@ -702,30 +763,24 @@ function chain (args) {
   @param        {object} [scope]
   @return       {iterable}
 */
-function imap (o, fn) {
+export function* imap (o, fn) {
 
-  var iterable = iterator(o);
+  let iterable = iterator(o);
+  let data = {};
 
-  return {
+  while (!data.done) {
 
-    next: function () {
-
-      var data = iterable.next();
-
-      return {
-        value: [fn(data.value[0], data.value[1]), data.value[1]],
-        done: data.done
-      };
-    }
+    data = iterable.next();
+    yield fn(data.value);
   }
 }
 
 
-function ifilter (o, fn) {
+export function ifilter (o, fn) {
 
-  var iterable = iterator(o);
-  var prev;
-  var next;
+  let iterable = iterator(o);
+  let prev;
+  let next;
 
   return {
 
@@ -738,7 +793,7 @@ function ifilter (o, fn) {
 
       if (!prev || (prev && !prev.done)) {
 
-        var data = iterable.next();
+        let data = iterable.next();
 
         while (true) {
 
@@ -776,15 +831,15 @@ function ifilter (o, fn) {
   @param        {number} [step]
   @return       {iterable}
 */
-function range  (start, stop, step) {
+export function range (start, stop, step) {
 
-  var i = 0;
+  let i = 0;
 
   step = step || 1;
 
   return {
     next: function() {
-      var ret = start;
+      let ret = start;
       if(start >= stop) {
         throw StopIteration;
       }
@@ -793,32 +848,3 @@ function range  (start, stop, step) {
     }
   };
 }
-
-//  public
-exports.StopIteration = StopIteration;
-exports.iterator      = iterator;
-
-exports.forEach = forEach;
-exports.filter = filter;
-exports.map = map;
-exports.some = some;
-exports.every = every;
-exports.find = find;
-exports.findIndex = findIndex;
-exports.findLast = findLast;
-exports.findLastIndex = findLastIndex;
-exports.takeWhile = takeWhile;
-exports.dropWhile = dropWhile;
-exports.imap = imap;
-exports.ifilter = ifilter;
-exports.lastIndexOf = lastIndexOf;
-exports.indexOf = indexOf;
-exports.toArray = toArray;
-exports.reduce = reduce;
-exports.sum = sum;
-exports.chain = chain;
-exports.zip = zip;
-
-exports.range = range;
-exports.invoke = invoke;
-exports.pluck = pluck;

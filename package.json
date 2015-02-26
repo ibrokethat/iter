@@ -1,27 +1,38 @@
 {
   "name": "super-iter",
   "description": "super iteration",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "author": "si@ibrokethat.com",
   "contributors": [
-    { "name": "Simon Jefford", "email": "si@ibrokethat.com" },
-    { "name": "Christos Constandinou", "email": "christos@muigui.com" }
+    {
+      "name": "Simon Jefford",
+      "email": "si@ibrokethat.com"
+    },
+    {
+      "name": "Christos Constandinou",
+      "email": "christos@muigui.com"
+    }
   ],
-  "dependencies": {},
   "devDependencies": {
+    "babel": "^4.5.5",
     "chai": "latest",
     "mocha": "latest",
     "sinon": "latest"
   },
-  "keywords": ["ibrokethat", "iteration"],
+  "keywords": [
+    "ibrokethat",
+    "iteration"
+  ],
   "repository": {
     "type": "git",
     "url": "git@github.com:ibrokethat/iter"
   },
   "main": "iter.js",
   "scripts": {
-    "prepublish" : "npm prune",
-    "test": "node --harmony --harmony_typeof ./node_modules/mocha/bin/_mocha --colors --recursive --ui bdd --reporter spec ./test --NODE_ENV=test"
+    "prepublish": "npm prune",
+    "test": "./node_modules/.bin/mocha --compilers js:./test/babel --blacklist regenerator --harmony --colors --recursive -R spec --ui bdd ./test/**/*.test.js --NODE_ENV=test"
   },
-  "engines": {"node": "0.11.x"}
+  "engines": {
+    "node": "0.12.x"
+  }
 }
