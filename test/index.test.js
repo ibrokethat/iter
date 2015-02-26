@@ -7,7 +7,6 @@ import {expect} from 'chai';
 let arr;
 let obj;
 let gen;
-let genString;
 let objSym;
 let fakes;
 
@@ -37,21 +36,6 @@ describe("test iter module: ", function() {
         yield a.shift();
       }
     };
-
-    genString = function (six) {
-      let a = {one: 1, two: 2, three: 3, four: 4, five: 5};
-      if (six) a['six'] = 3;
-      let i = 0;
-      let keys = Object.keys(a);
-      return {
-        next: function () {
-          return {
-            value: [a[keys[i]], keys[i++]],
-            done: i === keys.length
-          }
-        }
-      }
-    }
 
 
     objSym = {
@@ -130,7 +114,7 @@ describe("test iter module: ", function() {
   });
 
 
-  describe.only("function forEach", function() {
+  describe("function forEach", function() {
 
     it("should iterate over an array", function() {
 
@@ -268,16 +252,6 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should filter on an object with a next method with string keys", function() {
-
-      let results = underTest.filter(genString(), function(value) {
-        return value < 3;
-      });
-
-      expect(results).to.be.deep.equal({one: 1, two: 2});
-
-    });
-
     it("should handle an empty object", function() {
 
       let results = underTest.filter({}, function(value) {
@@ -335,16 +309,6 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should map on an object with a next method with string keys", function() {
-
-     let results = underTest.map(genString(), function(value) {
-        return value * 2;
-      });
-
-      expect(results).to.be.deep.equal({one: 2, two: 4, three: 6, four: 8, five: 10});
-
-    });
-
     it("should handle an empty object", function() {
 
       let results = underTest.map({}, function(value) {
@@ -364,6 +328,7 @@ describe("test iter module: ", function() {
       expect(results).to.be.deep.equal([]);
 
     });
+
   });
 
   describe("function some", function() {
@@ -503,33 +468,6 @@ describe("test iter module: ", function() {
 
     });
 
-
-    it("should indexOf on an object with next method", function() {
-
-      let results = underTest.indexOf(gen(true), 3);
-
-      expect(results).to.be.equal(2);
-
-      results = underTest.indexOf(obj, 5000);
-
-      expect(results).to.be.equal(-1);
-
-    });
-
-
-    it("should indexOf on an object with next method with a string key", function() {
-
-      let results = underTest.indexOf(genString(true), 3);
-
-      expect(results).to.be.equal('three');
-
-      results = underTest.indexOf(genString(true), 5000);
-
-      expect(results).to.be.equal(-1);
-
-    });
-
-
   });
 
 
@@ -641,41 +579,6 @@ describe("test iter module: ", function() {
 
     });
 
-
-    it("should findIndex on an object with next method", function() {
-
-      let results = underTest.findIndex(gen(true), function(value) {
-        return value > 2;
-      });
-
-      expect(results).to.be.equal(2);
-
-      results = underTest.findIndex(obj, function (value) {
-        return value > 100;
-      });
-
-      expect(results).to.be.equal(-1);
-
-    });
-
-
-    it("should findIndex on an object with next method with a string key", function() {
-
-      let results = underTest.findIndex(genString(true), function(value) {
-        return value > 2;
-      });
-
-      expect(results).to.be.equal('three');
-
-      results = underTest.findIndex(obj, function (value) {
-        return value > 100;
-      });
-
-      expect(results).to.be.equal(-1);
-
-    });
-
-
   });
 
 
@@ -710,31 +613,6 @@ describe("test iter module: ", function() {
       expect(results).to.be.equal(-1);
 
     });
-
-    it("should lastIndexOf on an object with next method", function() {
-
-      let results = underTest.lastIndexOf(gen(true), 3);
-
-      expect(results).to.be.equal(5);
-
-      results = underTest.lastIndexOf(obj, 5000);
-
-      expect(results).to.be.equal(-1);
-
-    });
-
-    it("should lastIndexOf on an object with next method with a string", function() {
-
-      let results = underTest.lastIndexOf(genString(true), 3);
-
-      expect(results).to.be.equal('six');
-
-      results = underTest.lastIndexOf(genString(true), 5000);
-
-      expect(results).to.be.equal(-1);
-
-    });
-
 
   });
 
@@ -825,38 +703,6 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should findLastIndex on an object with next method", function() {
-
-      let results = underTest.findLastIndex(gen(true), function(value) {
-        return value > 2;
-      });
-
-      expect(results).to.be.equal(5);
-
-      results = underTest.findLastIndex(obj, function (value) {
-        return value > 100;
-      });
-
-      expect(results).to.be.equal(-1);
-
-    });
-
-
-    it("should findLastIndex on an object with next method with a string key", function() {
-
-      let results = underTest.findLastIndex(genString(true), function(value, k) {
-        return value === 3;
-      });
-
-      expect(results).to.be.equal('six');
-
-      results = underTest.findLastIndex(obj, function (value) {
-        return value > 100;
-      });
-
-      expect(results).to.be.equal(-1);
-
-    });
 
   });
 
@@ -1022,14 +868,6 @@ describe("test iter module: ", function() {
 
     });
 
-    it('should zip a bunch of generators with string keys', function () {
-
-      let results = underTest.zip(genString(), genString(), genString());
-
-      expect(results).to.deep.equal({one: [1, 1, 1], two: [2, 2, 2], three: [3, 3, 3], four: [4, 4, 4], five: [5, 5, 5]});
-
-    });
-
   });
 
 
@@ -1037,23 +875,24 @@ describe("test iter module: ", function() {
 
     it('should create an iterator that iterates over all items', function () {
 
-      let c = underTest.chain([arr, obj, gen]);
+      let c = underTest.chain(arr, obj, gen);
 
-      expect(c.next()).to.be.deep.equal({value:[10, 0], done: false});
-      expect(c.next()).to.be.deep.equal({value:[20, 1], done: false});
-      expect(c.next()).to.be.deep.equal({value:[30, 2], done: false});
-      expect(c.next()).to.be.deep.equal({value:[40, 3], done: false});
-      expect(c.next()).to.be.deep.equal({value:[50, 4], done: false});
-      expect(c.next()).to.be.deep.equal({value:[10, "ten"], done: false});
-      expect(c.next()).to.be.deep.equal({value:[20, "twenty"], done: false});
-      expect(c.next()).to.be.deep.equal({value:[30, "thirty"], done: false});
-      expect(c.next()).to.be.deep.equal({value:[40, "forty"], done: false});
-      expect(c.next()).to.be.deep.equal({value:[50, "fifty"], done: false});
-      expect(c.next()).to.be.deep.equal({value:[1, 0], done: false});
-      expect(c.next()).to.be.deep.equal({value:[2, 1], done: false});
-      expect(c.next()).to.be.deep.equal({value:[3, 2], done: false});
-      expect(c.next()).to.be.deep.equal({value:[4, 3], done: false});
-      expect(c.next()).to.be.deep.equal({value:[5, 4], done: true});
+      expect(c.next()).to.be.deep.equal({value:10, done: false});
+      expect(c.next()).to.be.deep.equal({value:20, done: false});
+      expect(c.next()).to.be.deep.equal({value:30, done: false});
+      expect(c.next()).to.be.deep.equal({value:40, done: false});
+      expect(c.next()).to.be.deep.equal({value:50, done: false});
+      expect(c.next()).to.be.deep.equal({value:10, done: false});
+      expect(c.next()).to.be.deep.equal({value:20, done: false});
+      expect(c.next()).to.be.deep.equal({value:30, done: false});
+      expect(c.next()).to.be.deep.equal({value:40, done: false});
+      expect(c.next()).to.be.deep.equal({value:50, done: false});
+      expect(c.next()).to.be.deep.equal({value:1, done: false});
+      expect(c.next()).to.be.deep.equal({value:2, done: false});
+      expect(c.next()).to.be.deep.equal({value:3, done: false});
+      expect(c.next()).to.be.deep.equal({value:4, done: false});
+      expect(c.next()).to.be.deep.equal({value:5, done: false});
+      expect(c.next()).to.be.deep.equal({value:undefined, done: true});
 
     });
 
@@ -1117,23 +956,26 @@ describe("test iter module: ", function() {
         return v > 25;
       });
 
-      expect(c.next()).to.be.deep.equal({value: [30, 2], done: false});
-      expect(c.next()).to.be.deep.equal({value: [40, 3], done: false});
-      expect(c.next()).to.be.deep.equal({value: [50, 4], done: true});
+      expect(c.next()).to.be.deep.equal({value: 30, done: false});
+      expect(c.next()).to.be.deep.equal({value: 40, done: false});
+      expect(c.next()).to.be.deep.equal({value: 50, done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
       c = underTest.ifilter(arr, function (v) {
         return v < 25;
       });
 
-      expect(c.next()).to.be.deep.equal({value: [10, 0], done: false});
-      expect(c.next()).to.be.deep.equal({value: [20, 1], done: true});
+      expect(c.next()).to.be.deep.equal({value: 10, done: false});
+      expect(c.next()).to.be.deep.equal({value: 20, done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
       c = underTest.ifilter(arr, function (v) {
         return ((v / 10) % 2 === 0);
       });
 
-      expect(c.next()).to.be.deep.equal({value: [20, 1], done: false});
-      expect(c.next()).to.be.deep.equal({value: [40, 3], done: true});
+      expect(c.next()).to.be.deep.equal({value: 20, done: false});
+      expect(c.next()).to.be.deep.equal({value: 40, done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
     });
 
@@ -1143,23 +985,26 @@ describe("test iter module: ", function() {
         return v > 25;
       });
 
-      expect(c.next()).to.be.deep.equal({value: [30, "thirty"], done: false});
-      expect(c.next()).to.be.deep.equal({value: [40, "forty"], done: false});
-      expect(c.next()).to.be.deep.equal({value: [50, "fifty"], done: true});
+      expect(c.next()).to.be.deep.equal({value: 30, done: false});
+      expect(c.next()).to.be.deep.equal({value: 40, done: false});
+      expect(c.next()).to.be.deep.equal({value: 50, done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
       c = underTest.ifilter(obj, function (v) {
         return v < 25;
       });
 
-      expect(c.next()).to.be.deep.equal({value: [10, "ten"], done: false});
-      expect(c.next()).to.be.deep.equal({value: [20, "twenty"], done: true});
+      expect(c.next()).to.be.deep.equal({value: 10, done: false});
+      expect(c.next()).to.be.deep.equal({value: 20, done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
       c = underTest.ifilter(obj, function (v) {
         return ((v / 10) % 2 === 0);
       });
 
-      expect(c.next()).to.be.deep.equal({value: [20, "twenty"], done: false});
-      expect(c.next()).to.be.deep.equal({value: [40, "forty"], done: true});
+      expect(c.next()).to.be.deep.equal({value: 20, done: false});
+      expect(c.next()).to.be.deep.equal({value: 40, done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
     });
 
@@ -1170,23 +1015,26 @@ describe("test iter module: ", function() {
         return v > 2;
       });
 
-      expect(c.next()).to.be.deep.equal({value: [3, 2], done: false});
-      expect(c.next()).to.be.deep.equal({value: [4, 3], done: false});
-      expect(c.next()).to.be.deep.equal({value: [5, 4], done: true});
+      expect(c.next()).to.be.deep.equal({value: 3, done: false});
+      expect(c.next()).to.be.deep.equal({value: 4, done: false});
+      expect(c.next()).to.be.deep.equal({value: 5, done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
       c = underTest.ifilter(gen(), function (v) {
         return v < 3;
       });
 
-      expect(c.next()).to.be.deep.equal({value: [1, 0], done: false});
-      expect(c.next()).to.be.deep.equal({value: [2, 1], done: true});
+      expect(c.next()).to.be.deep.equal({value: 1, done: false});
+      expect(c.next()).to.be.deep.equal({value: 2, done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
       c = underTest.ifilter(gen(), function (v) {
         return (v % 2 === 0);
       });
 
-      expect(c.next()).to.be.deep.equal({value: [2, 1], done: false});
-      expect(c.next()).to.be.deep.equal({value: [4, 3], done: true});
+      expect(c.next()).to.be.deep.equal({value: 2, done: false});
+      expect(c.next()).to.be.deep.equal({value: 4, done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
     });
 

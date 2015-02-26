@@ -36,16 +36,6 @@ function returns (o) {
   function setObject (v, k) {
     r[k] = v;
   };
-  // function setObjectOrArray (v, k) {
-  //   if (typeof k === 'number') {
-  //     r = r || [];
-  //     setArray(v);
-  //   }
-  //   else {
-  //     r = r || {};
-  //     setObject(v, k);
-  //   }
-  // };
 
   if (isIterable(o) || isArrayLike(o)) {
     r = [];
@@ -114,53 +104,6 @@ export function iterator (object) {
 
 }
 
-// export function iterator (object) {
-
-//   let o = typeof object === 'function' ? object() : object;
-//   let i;
-//   let len;
-
-//   switch (true) {
-
-//     //  is array like
-//     case isArrayLike(o):
-
-//       i = 0;
-//       len = o.length;
-
-//       return {
-//         next: function () {
-//           return {
-//             value: [o[i], i++],
-//             done: i === len ? true : false
-//           }
-//         }
-//       }
-
-//     //  iterate
-//     case (typeof o.next === 'function'):
-
-//       return o;
-
-//     //  is obj with keys
-//     default:
-
-//       i = 0;
-//       let keys = Object.keys(o);
-//       len = keys.length;
-
-//       return {
-//         next: function () {
-//           return {
-//             value: [o[keys[i]], keys[i++]],
-//             done: i === len ? true : false
-//           };
-//         }
-//       }
-
-//   }
-// }
-
 
 /**
   @descrption   applies a function to each item in an object
@@ -196,11 +139,11 @@ export function forEach (object, fn) {
       //  iterator object
       case (typeof o.next === 'function'):
 
-        let data = {};
+        let data = o.next();
 
         while (!data.done) {
-          data = o.next();
           fn(data.value);
+          data = o.next();
         }
         break;
 
@@ -594,7 +537,7 @@ export function reduce (o, fn, acc){
       throw new TypeError("reduce() of sequence with no initial value");
     }
     else {
-      acc = r.value[0];
+      acc = r.value;
     }
 
   }
@@ -699,7 +642,7 @@ export function zip () {
     let values = [v];
     let i = 0;
     while (++i < args.length) {
-      values.push(typeof args[i].next === 'function' ? args[i].next().value[0] : args[i][k]);
+      values.push(typeof args[i].next === 'function' ? args[i].next().value : args[i][k]);
     }
     r.set(values, k);
   });
@@ -719,7 +662,7 @@ export function zip () {
   @param        {array} args
   @return       {iterable}
 */
-export function chain (args) {
+export function chain2 (args) {
 
   if(args.length === 1) {
     return iterator(args[0]);
@@ -754,6 +697,34 @@ export function chain (args) {
   };
 }
 
+export function* chain (...args) {
+
+  if(args.length === 1) {
+    return iterator(args[0]);
+  }
+
+  let iterables = map(args, iterator);
+  let data = iterables[0].next();
+
+  while (true) {
+
+    if (!data.done) {
+      yield data.value;
+    }
+    else {
+
+      if (iterables.length === 1) {
+        break;
+      }
+      iterables.shift();
+    }
+
+    data = iterables[0].next();
+  }
+}
+
+
+
 
 
 /**
@@ -766,61 +737,31 @@ export function chain (args) {
 export function* imap (o, fn) {
 
   let iterable = iterator(o);
-  let data = {};
+  let data = iterable.next();
 
   while (!data.done) {
 
-    data = iterable.next();
     yield fn(data.value);
+    data = iterable.next();
   }
 }
 
 
-export function ifilter (o, fn) {
+export function* ifilter (o, fn) {
+
 
   let iterable = iterator(o);
-  let prev;
-  let next;
+  let data = iterable.next();
 
-  return {
+  while (!data.done) {
 
-    next: function () {
-
-      if (next) {
-        prev = next;
-        next = false;
-      }
-
-      if (!prev || (prev && !prev.done)) {
-
-        let data = iterable.next();
-
-        while (true) {
-
-          if (fn(data.value[0], data.value[1])) {
-            if (!prev) {
-              prev = data;
-            }
-            else {
-              next = data;
-              break
-            }
-          };
-
-          if ((prev && prev.done) || data.done) {
-            break;
-          }
-
-          data = iterable.next();
-
-        }
-      }
-
-      return next ? prev : {value: prev.value, done: true};
+    if (fn(data.value)) {
+      yield data.value;
     }
-  };
-
+    data = iterable.next();
+  }
 }
+
 
 
 
