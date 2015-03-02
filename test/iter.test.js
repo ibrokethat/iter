@@ -333,7 +333,6 @@ describe("test iter module: ", function() {
         return value < 30;
       });
 
-      expect(results.constructor).to.be.equal(Array);
       expect(results).to.be.deep.equal([10, 20]);
 
     });
@@ -371,7 +370,6 @@ describe("test iter module: ", function() {
         return value < 30;
       });
 
-      expect(results.constructor).to.be.equal(Object);
       expect(results).to.be.deep.equal({ten: 10, twenty: 20});
 
     });
@@ -382,7 +380,6 @@ describe("test iter module: ", function() {
         return value < 3;
       });
 
-      expect(results.constructor).to.be.equal(Array);
       expect(results).to.be.deep.equal([1, 2]);
 
     });
@@ -393,7 +390,6 @@ describe("test iter module: ", function() {
         return value < 3;
       });
 
-      expect(results.constructor).to.be.equal(Object);
       expect(results).to.be.deep.equal({'one': 1, 'two': 2});
 
     });
@@ -449,7 +445,7 @@ describe("test iter module: ", function() {
   });
 
 
-  describe("function map", function() {
+  describe.only("function map", function() {
 
     it("should map on an array", function() {
 
@@ -458,6 +454,23 @@ describe("test iter module: ", function() {
       });
 
       expect(results).to.be.deep.equal([20, 40, 60, 80, 100]);
+
+    });
+
+
+    it("should map on a, er, a map", function() {
+
+      let results = underTest.map(map, function(value) {
+        return value * 2;
+      });
+
+      expect(results.constructor).to.be.equal(Map);
+      expect(results.size).to.be.equal(5);
+      expect(results.get('ten')).to.be.equal(20);
+      expect(results.get('twenty')).to.be.equal(40);
+      expect(results.get('thirty')).to.be.equal(60);
+      expect(results.get('forty')).to.be.equal(80);
+      expect(results.get('fifty')).to.be.equal(100);
 
     });
 
