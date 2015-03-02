@@ -3,6 +3,11 @@
 */
 "use strict";
 
+let StopIteration = new Error();
+
+let GeneratorFunctionPrototype = Object.getPrototypeOf(function*() {yield 1});
+let GeneratorFunction = GeneratorFunctionPrototype.constructor;
+
 
 /**
   @description  returns true if a === b
@@ -20,54 +25,50 @@ function negate (fn, v, k) {
   return !fn(v, k);
 }
 
-function isArrayLike (o) {
+// function isArrayLike (o) {
 
-  return typeof o !== 'function' && typeof o.length === 'number';
-}
+//   return typeof o !== 'function' && typeof o.length === 'number';
+// }
 
 
 function returns (o) {
 
-  let r, set;
+  let genSet = (v, k, type) => {
 
-  function setArray(v) {
-    r.push(v);
-  };
-  function setObject (v, k) {
-    r[k] = v;
-  };
+    if (!r) {
+      [r, set] = cache.get(type || Array);
+    }
+    set(v, k);
+  }
 
-  if (isIterable(o) || isArrayLike(o)) {
-    r = [];
-    set = setArray;
-  }
-  else {
-    r = {};
-    set = setObject;
-  }
+  let cache = new WeakMap();
+
+  cache.set(Array, [[], (v) => r.push(v)]);
+  cache.set(Map, [new Map(), (v, k) => r.set(k, v)]);
+  cache.set(Set, [new Set(), (v) => r.add(v)]);
+  cache.set(Object, [{}, (v, k) => r[k] = v]);
+  cache.set(GeneratorFunction, [null, genSet]);
+  cache.set(GeneratorFunctionPrototype, [null, genSet]);
+
+  let [r, set] = cache.get(o.constructor);
 
   return {
     set: set,
-    get: function () {
-      return r || {};
-    }
+    get: () => r
   };
 }
 
 
-function isIterable (o) {
+// function isIterable (o) {
 
-  return (typeof o === 'function' || typeof o.next === 'function' || typeof o[Symbol.iterator] === 'function');
-}
-
-
-let StopIteration = new Error();
+//   return (typeof o === 'function' || typeof o.next === 'function' || typeof o[Symbol.iterator] === 'function');
+// }
 
 
 
 /**
   @description  creates an iterable object from another object
-  @param        {object} obect
+  @param        {object} object
   @return       {iterable}
 */
 export function iterator (object) {
@@ -76,10 +77,13 @@ export function iterator (object) {
 
   switch (true) {
 
-    //  fall through on purpose here
+    case typeof o.entries === 'function':
+
+      return o.entries();
+
     case typeof o[Symbol.iterator] === 'function':
 
-      o = o[Symbol.iterator]();
+      return o[Symbol.iterator]();
 
     case (typeof o.next === 'function'):
 
@@ -95,7 +99,7 @@ export function iterator (object) {
 
         while (i < len) {
 
-          yield o[keys[i++]];
+          yield [keys[i], o[keys[i++]], Object];
         }
 
       })();
@@ -105,6 +109,7 @@ export function iterator (object) {
 }
 
 
+
 /**
   @descrption   applies a function to each item in an object
                 after selecting most appropriate method to perform the iteration
@@ -112,58 +117,42 @@ export function iterator (object) {
   @param        {fn} function
 */
 
-export function forEach (object, fn) {
+export function forEach (o, fn) {
 
-  let o = typeof object === 'function' ? object() : object;
 
   try {
 
-    switch (true) {
+    if (typeof o.entries === 'function') {
 
-      //  has .forEach
-      case (typeof o.forEach === 'function'):
+      for (let [k, v] of o.entries()) {
+        fn(v, k);
+      }
+    }
+    else if (typeof o[Symbol.iterator] === 'function') {
 
-        o.forEach(fn);
-        break;
+      for (let [k, v, type] of o) {
+        fn(v, k, type);
+      }
+    }
+    else if (typeof o === 'function') {
 
-      //  is array like
-      case isArrayLike(o):
+      for (let [k, v, type] of o()) {
+        fn(v, k, type);
+      }
+    }
+    else {
 
-        let i = -1;
-        let length = o.length;
-        while (++i < length) {
-          fn(o[i], i);
-        }
-        break;
+      let it = iterator(o);
+      let data = it.next();
 
-      //  iterator object
-      case (typeof o.next === 'function'):
+      while (!data.done) {
 
-        let data = o.next();
-
-        while (!data.done) {
-          fn(data.value);
-          data = o.next();
-        }
-        break;
-
-      //  iterator protocol
-      case (typeof o[Symbol.iterator] === 'function'):
-
-        for (let v of o) {
-          fn(v);
-        }
-        break;
-
-      //  is obj with keys
-      default:
-
-        Object.keys(o).forEach(function(key) {
-          fn(o[key], key);
-        });
+        let [k, v, type] = data.value;
+        fn(v, k, type);
+        data = it.next();
+      }
 
     }
-
   }
   catch (e) {
 
@@ -183,15 +172,11 @@ export function forEach (object, fn) {
 */
 export function filter (o, fn) {
 
-  if (typeof o.filter === 'function') {
-    return o.filter(fn);
-  }
-
   let r = returns(o);
 
-  forEach(o, function (v, k) {
+  forEach(o, (v, k, type) => {
     if (fn(v, k)) {
-      r.set(v, k);
+      r.set(v, k, type);
     }
   });
   return r.get();
