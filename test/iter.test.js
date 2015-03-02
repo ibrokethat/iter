@@ -146,11 +146,11 @@ describe("test iter module: ", function() {
     it('should return the iterable object if passed an object with an iterator', function () {
 
       let it = underTest.iterator(objSym);
-      expect(it.next()).to.be.deep.equal({value: 1, done: false});
-      expect(it.next()).to.be.deep.equal({value: 2, done: false});
-      expect(it.next()).to.be.deep.equal({value: 3, done: false});
-      expect(it.next()).to.be.deep.equal({value: 4, done: false});
-      expect(it.next()).to.be.deep.equal({value: 5, done: false});
+      expect(it.next()).to.be.deep.equal({value: [0, 1], done: false});
+      expect(it.next()).to.be.deep.equal({value: [1, 2], done: false});
+      expect(it.next()).to.be.deep.equal({value: [2, 3], done: false});
+      expect(it.next()).to.be.deep.equal({value: [3, 4], done: false});
+      expect(it.next()).to.be.deep.equal({value: [4, 5], done: false});
       expect(it.next()).to.be.deep.equal({value: undefined, done: true});
 
     });
@@ -158,11 +158,11 @@ describe("test iter module: ", function() {
     it('should return an iterable object if passed a generator function', function () {
 
       let it = underTest.iterator(gen);
-      expect(it.next()).to.be.deep.equal({value: 1, done: false});
-      expect(it.next()).to.be.deep.equal({value: 2, done: false});
-      expect(it.next()).to.be.deep.equal({value: 3, done: false});
-      expect(it.next()).to.be.deep.equal({value: 4, done: false});
-      expect(it.next()).to.be.deep.equal({value: 5, done: false});
+      expect(it.next()).to.be.deep.equal({value: [0, 1], done: false});
+      expect(it.next()).to.be.deep.equal({value: [1, 2], done: false});
+      expect(it.next()).to.be.deep.equal({value: [2, 3], done: false});
+      expect(it.next()).to.be.deep.equal({value: [3, 4], done: false});
+      expect(it.next()).to.be.deep.equal({value: [4, 5], done: false});
       expect(it.next()).to.be.deep.equal({value: undefined, done: true});
 
     });
@@ -170,11 +170,11 @@ describe("test iter module: ", function() {
     it('should return an iterable object from an object', function () {
 
       let it = underTest.iterator(obj);
-      expect(it.next()).to.be.deep.equal({value: ['ten', 10], done: false});
-      expect(it.next()).to.be.deep.equal({value: ['twenty', 20], done: false});
-      expect(it.next()).to.be.deep.equal({value: ['thirty', 30], done: false});
-      expect(it.next()).to.be.deep.equal({value: ['forty', 40], done: false});
-      expect(it.next()).to.be.deep.equal({value: ['fifty', 50], done: false});
+      expect(it.next()).to.be.deep.equal({value: ['ten', 10, Object], done: false});
+      expect(it.next()).to.be.deep.equal({value: ['twenty', 20, Object], done: false});
+      expect(it.next()).to.be.deep.equal({value: ['thirty', 30, Object], done: false});
+      expect(it.next()).to.be.deep.equal({value: ['forty', 40, Object], done: false});
+      expect(it.next()).to.be.deep.equal({value: ['fifty', 50, Object], done: false});
       expect(it.next()).to.be.deep.equal({value: undefined, done: true});
 
     });
@@ -325,7 +325,7 @@ describe("test iter module: ", function() {
   });
 
 
-  describe.only("function filter", function() {
+  describe("function filter", function() {
 
     it("should filter on an array", function() {
 

@@ -189,17 +189,15 @@ export function filter (o, fn) {
   @param        {func} function
   @return       {object|array}
 */
-export function map (o, fn) {
+export function map (...args) {
 
-  if (arguments.length === 2) {
+  if (args.length === 2) {
 
-    if (typeof o.map === 'function') {
-      return o.map(fn);
-    }
+    let [o, fn] = args;
 
     let r = returns(o);
-    forEach(o, function (v, k) {
-      r.set(fn(v, k), k);
+    forEach(o, (v, k, type) => {
+      r.set(fn(v, k), k, type);
     });
     return r.get();
 
