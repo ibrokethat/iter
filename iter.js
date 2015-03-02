@@ -5,8 +5,8 @@
 
 let StopIteration = new Error();
 
-let GeneratorFunctionPrototype = Object.getPrototypeOf(function*() {yield 1});
-let GeneratorFunction = GeneratorFunctionPrototype.constructor;
+export let GeneratorFunctionPrototype = Object.getPrototypeOf(function*() {yield 1});
+export let GeneratorFunction = GeneratorFunctionPrototype.constructor;
 
 
 /**
@@ -131,12 +131,14 @@ export function forEach (o, fn) {
     else if (typeof o[Symbol.iterator] === 'function') {
 
       for (let [k, v, type] of o) {
+        k = type === Set ? v : k;
         fn(v, k, type);
       }
     }
     else if (typeof o === 'function') {
 
       for (let [k, v, type] of o()) {
+        k = type === Set ? v : k;
         fn(v, k, type);
       }
     }
@@ -738,11 +740,14 @@ export function* ifilter (o, fn) {
 
   let iterable = iterator(o);
   let data = iterable.next();
+  let type = o.constructor;
 
   while (!data.done) {
 
-    if (fn(data.value)) {
-      yield data.value;
+    let [k, v, t] = data.value;
+
+    if (fn(v, k)) {
+      yield [k, v, t || type];
     }
     data = iterable.next();
   }
@@ -775,3 +780,21 @@ export function range (start, stop, step) {
     }
   };
 }
+
+
+let oo = {
+  [Symbol.iterator]: function* () {
+
+    let i = 0;
+
+    while (i < 11) {
+      yield [null, i, Set];
+      i = i +2;
+    }
+
+  }
+}
+
+
+
+forEach(imap(ifilter(oo, v => v%4 === 0), v => v * 10), (v, k) => console.log(v, k));
