@@ -721,10 +721,13 @@ export function* imap (o, fn) {
 
   let iterable = iterator(o);
   let data = iterable.next();
+  let type = o.constructor;
 
   while (!data.done) {
 
-    yield fn(data.value);
+    let [k, v, t] = data.value;
+
+    yield [k, fn(v, k), t || type];
     data = iterable.next();
   }
 }
