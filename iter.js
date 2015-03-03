@@ -25,11 +25,6 @@ function negate (fn, v, k) {
   return !fn(v, k);
 }
 
-// function isArrayLike (o) {
-
-//   return typeof o !== 'function' && typeof o.length === 'number';
-// }
-
 
 function returns (o) {
 
@@ -57,12 +52,6 @@ function returns (o) {
     get: () => r
   };
 }
-
-
-// function isIterable (o) {
-
-//   return (typeof o === 'function' || typeof o.next === 'function' || typeof o[Symbol.iterator] === 'function');
-// }
 
 
 
@@ -763,38 +752,33 @@ export function* ifilter (o, fn) {
   @param        {number} [step]
   @return       {iterable}
 */
-export function range (start, stop, step) {
+export function* range (start, stop, step) {
 
   let i = 0;
 
   step = step || 1;
 
-  return {
-    next: function() {
-      let ret = start;
-      if(start >= stop) {
-        throw StopIteration;
-      }
-      start = start + step;
-      return [ret, i++];
-    }
-  };
-}
+  while (start <= stop) {
 
-
-let oo = {
-  [Symbol.iterator]: function* () {
-
-    let i = 0;
-
-    while (i < 11) {
-      yield [null, i, Set];
-      i = i +2;
-    }
-
+    yield [i++, start];
+    start = start + step;
   }
 }
 
 
+// let oo = {
+//   [Symbol.iterator]: function* () {
 
-forEach(imap(ifilter(oo, v => v%4 === 0), v => v * 10), (v, k) => console.log(v, k));
+//     let i = 0;
+
+//     while (i < 11) {
+//       yield [null, i, Set];
+//       i = i +2;
+//     }
+
+//   }
+// }
+
+
+
+// forEach(imap(ifilter(oo, v => v%4 === 0), v => v * 10), (v, k) => console.log(v, k));

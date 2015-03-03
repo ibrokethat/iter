@@ -15,10 +15,10 @@ let genObj;
 let objSym;
 let fakes;
 
-describe("test iter module: ", function() {
+describe("test iter module: ", () => {
 
 
-  beforeEach(function() {
+  beforeEach(()  =>  {
 
     fakes = sinon.sandbox.create();
 
@@ -97,19 +97,25 @@ describe("test iter module: ", function() {
 
   });
 
-  afterEach(function() {
+  afterEach(() =>  {
 
     arr = null;
     obj = null;
     gen = null;
+    objSym = null;
+    genSet = null;
+    genMap = null;
+    genObj = null;
+    set = null;
+    map = null;
     fakes.restore();
 
   });
 
 
-  describe('function iterator', function () {
+  describe('function iterator', () => {
 
-    it('should return an iterable object from an Array.prototype.entries method', function () {
+    it('should return an iterable object from an Array.prototype.entries method', () => {
 
       let it = underTest.iterator(arr);
 
@@ -121,7 +127,7 @@ describe("test iter module: ", function() {
       expect(it.next()).to.be.deep.equal({value: undefined, done: true});
     });
 
-    it('should return an iterable object from a Map.prototype.entries method', function () {
+    it('should return an iterable object from a Map.prototype.entries method', () => {
 
       let it = underTest.iterator(map);
       expect(it.next()).to.be.deep.equal({value: ['ten', 10], done: false});
@@ -132,7 +138,7 @@ describe("test iter module: ", function() {
       expect(it.next()).to.be.deep.equal({value: undefined, done: true});
     });
 
-    it('should return an iterable object from a Set.prototype.entries method', function () {
+    it('should return an iterable object from a Set.prototype.entries method', () => {
 
       let it = underTest.iterator(set);
       expect(it.next()).to.be.deep.equal({value: [10, 10], done: false});
@@ -143,7 +149,7 @@ describe("test iter module: ", function() {
       expect(it.next()).to.be.deep.equal({value: undefined, done: true});
     });
 
-    it('should return the iterable object if passed an object with an iterator', function () {
+    it('should return the iterable object if passed an object with an iterator', () => {
 
       let it = underTest.iterator(objSym);
       expect(it.next()).to.be.deep.equal({value: [0, 1], done: false});
@@ -155,7 +161,7 @@ describe("test iter module: ", function() {
 
     });
 
-    it('should return an iterable object if passed a generator function', function () {
+    it('should return an iterable object if passed a generator function', () => {
 
       let it = underTest.iterator(gen);
       expect(it.next()).to.be.deep.equal({value: [0, 1], done: false});
@@ -167,7 +173,7 @@ describe("test iter module: ", function() {
 
     });
 
-    it('should return an iterable object from an object', function () {
+    it('should return an iterable object from an object', () => {
 
       let it = underTest.iterator(obj);
       expect(it.next()).to.be.deep.equal({value: ['ten', 10, Object], done: false});
@@ -179,7 +185,7 @@ describe("test iter module: ", function() {
 
     });
 
-    it('should return the iterable object if it is already an iterarable object', function () {
+    it('should return the iterable object if it is already an iterarable object', () => {
 
       let it = gen();
       expect(it).to.be.equal(underTest.iterator(it));
@@ -190,9 +196,9 @@ describe("test iter module: ", function() {
   });
 
 
-  describe("function forEach", function() {
+  describe('function forEach', () => {
 
-    it("should iterate over the iterator returned from the Array.prototype.entries method", function() {
+    it('should iterate over the iterator returned from the Array.prototype.entries method', () => {
 
       let spy = sinon.spy();
       underTest.forEach(arr, spy);
@@ -212,7 +218,7 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should iterate over the iterator returned from the Map.prototype.entries method", function() {
+    it('should iterate over the iterator returned from the Map.prototype.entries method', () => {
 
       let spy = sinon.spy();
       underTest.forEach(map, spy);
@@ -233,7 +239,7 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should iterate over the iterator returned from the Set.prototype.entries method", function() {
+    it('should iterate over the iterator returned from the Set.prototype.entries method', () => {
 
       let spy = sinon.spy();
       underTest.forEach(set, spy);
@@ -254,7 +260,7 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should iterate over an object", function() {
+    it('should iterate over an object', () => {
 
       let spy = sinon.spy();
       underTest.forEach(obj, spy);
@@ -275,7 +281,7 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should iterate over an object with a next() method", function() {
+    it('should iterate over an object with a next() method', () => {
 
       let spy = sinon.spy();
       underTest.forEach(gen(), spy);
@@ -291,7 +297,7 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should iterate over a function that returns a generator", function() {
+    it('should iterate over a function that returns a generator', () => {
 
       let spy = sinon.spy();
       underTest.forEach(gen, spy);
@@ -306,7 +312,7 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should iterate over an object with a Symbol.iterator function", function() {
+    it('should iterate over an object with a Symbol.iterator function', () => {
 
       let spy = sinon.spy();
       underTest.forEach(objSym, spy);
@@ -325,23 +331,19 @@ describe("test iter module: ", function() {
   });
 
 
-  describe("function filter", function() {
+  describe('function filter', () => {
 
-    it("should filter on an array", function() {
+    it('should filter on an array', () => {
 
-      let results = underTest.filter(arr, function(value) {
-        return value < 30;
-      });
+      let results = underTest.filter(arr, value => value < 30);
 
       expect(results).to.be.deep.equal([10, 20]);
 
     });
 
-    it("should filter on a Map", function() {
+    it('should filter on a Map', () => {
 
-      let results = underTest.filter(map, function(value) {
-        return value < 30;
-      });
+      let results = underTest.filter(map, value => value < 30);
 
       expect(results.constructor).to.be.equal(Map);
       expect(results.size).to.be.equal(2);
@@ -350,11 +352,9 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should filter on a Set", function() {
+    it('should filter on a Set', () => {
 
-      let results = underTest.filter(set, function(value) {
-        return value < 30;
-      });
+      let results = underTest.filter(set, value => value < 30);
 
       expect(results.constructor).to.be.equal(Set);
       expect(results.size).to.be.equal(2);
@@ -364,41 +364,33 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should filter on an object", function() {
+    it('should filter on an object', () => {
 
-      let results = underTest.filter(obj, function(value) {
-        return value < 30;
-      });
+      let results = underTest.filter(obj, value => value < 30);
 
       expect(results).to.be.deep.equal({ten: 10, twenty: 20});
 
     });
 
-    it("should filter on an object with a next method with no defined return type", function() {
+    it('should filter on an object with a next method with no defined return type', () => {
 
-      let results = underTest.filter(gen(), function(value) {
-        return value < 3;
-      });
+      let results = underTest.filter(gen(), value => value < 3);
 
       expect(results).to.be.deep.equal([1, 2]);
 
     });
 
-    it("should filter on an object with a next method with an Object return type", function() {
+    it('should filter on an object with a next method with an Object return type', () => {
 
-      let results = underTest.filter(genObj(), function(value) {
-        return value < 3;
-      });
+      let results = underTest.filter(genObj(), value => value < 3);
 
       expect(results).to.be.deep.equal({'one': 1, 'two': 2});
 
     });
 
-    it("should filter on an object with a next method with a Map return type", function() {
+    it('should filter on an object with a next method with a Map return type', () => {
 
-      let results = underTest.filter(genMap(), function(value) {
-        return value < 3;
-      });
+      let results = underTest.filter(genMap(), value => value < 3);
 
       expect(results.constructor).to.be.equal(Map);
       expect(results.size).to.be.equal(2);
@@ -407,11 +399,9 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should filter on an object with a next method with a Set return type", function() {
+    it('should filter on an object with a next method with a Set return type', () => {
 
-      let results = underTest.filter(genSet(), function(value) {
-        return value < 3;
-      });
+      let results = underTest.filter(genSet(), value => value < 3);
 
       expect(results.constructor).to.be.equal(Set);
       expect(results.size).to.be.equal(2);
@@ -421,42 +411,34 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should handle an empty array", function() {
+    it('should handle an empty array', () => {
 
-      let results = underTest.filter([], function(value) {
-        return value > 30;
-      });
+      let results = underTest.filter([], value => value > 30);
       expect(results.constructor).to.be.equal(Array);
       expect(results).to.be.deep.equal([]);
 
     });
 
-    it("should handle an empty object", function() {
+    it('should handle an empty object', () => {
 
-      let results = underTest.filter({}, function(value) {
-        return value > 30;
-      });
+      let results = underTest.filter({}, value => value > 30);
 
       expect(results.constructor).to.be.equal(Object);
       expect(results).to.be.deep.equal({});
 
     });
 
-    it("should handle an empty Map", function() {
+    it('should handle an empty Map', () => {
 
-      let results = underTest.filter(new Map(), function(value) {
-        return value > 30;
-      });
+      let results = underTest.filter(new Map(), value => value > 30);
 
       expect(results.constructor).to.be.equal(Map);
       expect(results.size).to.be.equal(0);
     });
 
-    it("should handle an empty Set", function() {
+    it('should handle an empty Set', () => {
 
-      let results = underTest.filter(new Set(), function(value) {
-        return value > 30;
-      });
+      let results = underTest.filter(new Set(), value => value > 30);
 
       expect(results.constructor).to.be.equal(Set);
       expect(results.size).to.be.equal(0);
@@ -466,24 +448,20 @@ describe("test iter module: ", function() {
   });
 
 
-  describe("function map", function() {
+  describe('function map', () => {
 
-    it("should map on an array", function() {
+    it('should map on an array', () => {
 
-      let results = underTest.map(arr, function(value) {
-        return value * 2;
-      });
+      let results = underTest.map(arr, value => value * 2);
 
       expect(results).to.be.deep.equal([20, 40, 60, 80, 100]);
 
     });
 
 
-    it("should map on a, er, a map", function() {
+    it('should map on a, er, a map', () => {
 
-      let results = underTest.map(map, function(value) {
-        return value * 2;
-      });
+      let results = underTest.map(map, value => value * 2);
 
       expect(results.constructor).to.be.equal(Map);
       expect(results.size).to.be.equal(5);
@@ -496,11 +474,9 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should map on a set", function() {
+    it('should map on a set', () => {
 
-      let results = underTest.map(set, function(value) {
-        return value * 2;
-      });
+      let results = underTest.map(set, value => value * 2);
 
       expect(results.constructor).to.be.equal(Set);
       expect(results.size).to.be.equal(5);
@@ -513,43 +489,35 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should map on an object", function() {
+    it('should map on an object', () => {
 
-      let results = underTest.map(obj, function(value) {
-        return value * 2;
-      });
+      let results = underTest.map(obj, value => value * 2);
 
       expect(results).to.be.deep.equal({ten: 20, twenty: 40, thirty: 60, forty: 80, fifty: 100});
 
     });
 
 
-    it("should map on an object with a next method with no defined return type", function() {
+    it('should map on an object with a next method with no defined return type', () => {
 
-     let results = underTest.map(gen(), function(value) {
-        return value * 2;
-      });
+     let results = underTest.map(gen(), value => value * 2);
 
       expect(results).to.be.deep.equal([2, 4, 6, 8, 10]);
 
     });
 
-    it("should map on an object with a next method with an Object return type", function() {
+    it('should map on an object with a next method with an Object return type', () => {
 
-     let results = underTest.map(genObj(), function(value) {
-        return value * 2;
-      });
+     let results = underTest.map(genObj(), value => value * 2);
 
       expect(results).to.be.deep.equal({one: 2, two: 4, three: 6, four: 8, five: 10});
 
     });
 
 
-    it("should filter on an object with a next method with a Map return type", function() {
+    it('should filter on an object with a next method with a Map return type', () => {
 
-      let results = underTest.map(genMap(), function(value) {
-        return value * 2;
-      });
+      let results = underTest.map(genMap(), value => value * 2);
 
       expect(results.constructor).to.be.equal(Map);
       expect(results.size).to.be.equal(5);
@@ -562,11 +530,9 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should filter on an object with a next method with a Set return type", function() {
+    it('should filter on an object with a next method with a Set return type', () => {
 
-      let results = underTest.map(genSet(), function(value) {
-        return value * 2;
-      });
+      let results = underTest.map(genSet(), value => value * 2);
 
       expect(results.constructor).to.be.equal(Set);
       expect(results.size).to.be.equal(5);
@@ -579,41 +545,33 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should handle an empty object", function() {
+    it('should handle an empty object', () => {
 
-      let results = underTest.map({}, function(value) {
-        return value > 30;
-      });
+      let results = underTest.map({}, value => value > 30);
 
       expect(results).to.be.deep.equal({});
 
     });
 
-    it("should handle an empty array", function() {
+    it('should handle an empty array', () => {
 
-      let results = underTest.map([], function(value) {
-        return value > 30;
-      });
+      let results = underTest.map([], value => value > 30);
 
       expect(results).to.be.deep.equal([]);
 
     });
 
-    it("should handle an empty Map", function() {
+    it('should handle an empty Map', () => {
 
-      let results = underTest.map(new Map(), function(value) {
-        return value > 30;
-      });
+      let results = underTest.map(new Map(), value => value > 30);
 
       expect(results.constructor).to.be.equal(Map);
       expect(results.size).to.be.equal(0);
     });
 
-    it("should handle an empty Set", function() {
+    it('should handle an empty Set', () => {
 
-      let results = underTest.map(new Set(), function(value) {
-        return value > 30;
-      });
+      let results = underTest.map(new Set(), value => value > 30);
 
       expect(results.constructor).to.be.equal(Set);
       expect(results.size).to.be.equal(0);
@@ -622,51 +580,39 @@ describe("test iter module: ", function() {
 
   });
 
-  describe("function some", function() {
+  describe('function some', () => {
 
-    it("should some on an array", function() {
+    it('should some on an array', () => {
 
-      let results = underTest.some(arr, function(value) {
-        return value > 30;
-      });
+      let results = underTest.some(arr, value => value > 30);
 
       expect(results).to.be.true;
 
-      results = underTest.some(arr, function(value) {
-        return value > 100;
-      });
+      results = underTest.some(arr, value => value > 100);
 
       expect(results).to.be.false;
 
     });
 
-    it("should some on an object", function() {
+    it('should some on an object', () => {
 
-      let results = underTest.some(obj, function(value) {
-        return value > 30;
-      });
+      let results = underTest.some(obj, value => value > 30);
 
       expect(results).to.be.true;
 
-      results = underTest.some(obj, function(value) {
-        return value > 100;
-      });
+      results = underTest.some(obj, value => value > 100);
 
       expect(results).to.be.false;
 
     });
 
-    it("should some on an object with a next method", function() {
+    it('should some on an object with a next method', () => {
 
-      let results = underTest.some(gen(), function(value) {
-        return value > 3;
-      });
+      let results = underTest.some(gen(), value => value > 3);
 
       expect(results).to.be.true;
 
-      results = underTest.some(gen(), function(value) {
-        return value > 10;
-      });
+      results = underTest.some(gen(), value => value > 10);
 
       expect(results).to.be.false;
 
@@ -675,51 +621,39 @@ describe("test iter module: ", function() {
   });
 
 
-  describe("function every", function() {
+  describe('function every', () => {
 
-    it("should every on an array", function() {
+    it('should every on an array', () => {
 
-      let results = underTest.every(arr, function(value) {
-        return value > 0;
-      });
+      let results = underTest.every(arr, value => value > 0);
 
       expect(results).to.be.true;
 
-      results = underTest.every(arr, function(value) {
-        return value > 50;
-      });
+      results = underTest.every(arr, value => value > 50);
 
       expect(results).to.be.false;
 
     });
 
-    it("should every on an object", function() {
+    it('should every on an object', () => {
 
-      let results = underTest.every(obj, function(value) {
-        return value > 0;
-      });
+      let results = underTest.every(obj, value => value > 0);
 
       expect(results).to.be.true;
 
-      results = underTest.every(obj, function(value) {
-        return value > 50;
-      });
+      results = underTest.every(obj, value => value > 50);
 
       expect(results).to.be.false;
 
     });
 
-    it("should every on an object with a next method", function() {
+    it('should every on an object with a next method', () => {
 
-      let results = underTest.every(gen(), function(value) {
-        return value > 0;
-      });
+      let results = underTest.every(gen(), value => value > 0);
 
       expect(results).to.be.true;
 
-      results = underTest.every(gen(), function(value) {
-        return value > 3;
-      });
+      results = underTest.every(gen(), value => value > 3);
 
       expect(results).to.be.false;
 
@@ -728,9 +662,9 @@ describe("test iter module: ", function() {
   });
 
 
-  describe("function indexOf", function() {
+  describe('function indexOf', () => {
 
-    it("should indexOf on an array", function() {
+    it('should indexOf on an array', () => {
 
       arr.push(30)
 
@@ -745,7 +679,7 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should indexOf on an object", function() {
+    it('should indexOf on an object', () => {
 
       obj['sixty'] = 30;
 
@@ -762,71 +696,55 @@ describe("test iter module: ", function() {
   });
 
 
-  describe("function find", function() {
+  describe('function find', () => {
 
-    it("should find on an array", function() {
+    it('should find on an array', () => {
 
-      let results = underTest.find(arr, function(value) {
-        return value > 30;
-      });
+      let results = underTest.find(arr, value => value > 30);
 
       expect(results).to.be.equal(40);
 
-      results = underTest.find(arr, function(value) {
-        return value > 100;
-      });
+      results = underTest.find(arr, value => value > 100);
 
       expect(results).to.be.undefined;
 
     });
 
-    it("should find on an object", function() {
+    it('should find on an object', () => {
 
-      let results = underTest.find(obj, function(value) {
-        return value > 30;
-      });
+      let results = underTest.find(obj, value => value > 30);
 
       expect(results).to.be.equal(40);
 
-      results = underTest.find(obj, function(value) {
-        return value > 100;
-      });
+      results = underTest.find(obj, value => value > 100);
 
       expect(results).to.be.undefined;
 
     });
 
-    it("should find on an object with a next method", function() {
+    it('should find on an object with a next method', () => {
 
-      let results = underTest.find(gen(), function(value) {
-        return value > 3;
-      });
+      let results = underTest.find(gen(), value => value > 3);
 
       expect(results).to.be.equal(4);
 
-      results = underTest.find(gen(), function(value) {
-        return value > 10;
-      });
+      results = underTest.find(gen(), value => value > 10);
 
       expect(results).to.be.undefined;
 
     });
 
-    it("should handle an empty object", function() {
+    it('should handle an empty object', () => {
 
-      let results = underTest.find({}, function(value) {
-        return value > 30;
-      });
+      let results = underTest.find({}, value => value > 30);
 
       expect(results).to.be.undefined;
 
     });
 
-    it("should handle an empty array", function() {
+    it('should handle an empty array', () => {
 
-      let results = underTest.find([], function(value) {
-        return value > 30;
-      });
+      let results = underTest.find([], value => value > 30);
 
       expect(results).to.be.undefined;
 
@@ -836,35 +754,27 @@ describe("test iter module: ", function() {
   });
 
 
-  describe("function findIndex", function() {
+  describe('function findIndex', () => {
 
-    it("should findIndex on an array", function() {
+    it('should findIndex on an array', () => {
 
-      let results = underTest.findIndex(arr, function(value) {
-        return value > 30;
-      });
+      let results = underTest.findIndex(arr, value => value > 30);
 
       expect(results).to.be.equal(3);
 
-      results = underTest.findIndex(arr, function(value) {
-        return value > 100;
-      });
+      results = underTest.findIndex(arr, value => value > 100);
 
       expect(results).to.be.equal(-1);
 
     });
 
-    it("should findIndex on an object", function() {
+    it('should findIndex on an object', () => {
 
-      let results = underTest.findIndex(obj, function(value) {
-        return value > 30;
-      });
+      let results = underTest.findIndex(obj, value => value > 30);
 
       expect(results).to.be.equal('forty');
 
-      results = underTest.findIndex(obj, function(value) {
-        return value > 100;
-      });
+      results = underTest.findIndex(obj, value => value > 100);
 
       expect(results).to.be.equal(-1);
 
@@ -874,9 +784,9 @@ describe("test iter module: ", function() {
 
 
 
-  describe("function lastIndexOf", function() {
+  describe('function lastIndexOf', () => {
 
-    it("should lastIndexOf on an array", function() {
+    it('should lastIndexOf on an array', () => {
 
       arr.push(30)
 
@@ -891,7 +801,7 @@ describe("test iter module: ", function() {
     });
 
 
-    it("should lastIndexOf on an object", function() {
+    it('should lastIndexOf on an object', () => {
 
       obj['sixty'] = 30;
 
@@ -908,51 +818,39 @@ describe("test iter module: ", function() {
   });
 
 
-  describe("function findLast", function() {
+  describe('function findLast', () => {
 
-    it("should find on an array", function() {
+    it('should find on an array', () => {
 
-      let results = underTest.findLast(arr, function(value) {
-        return value > 30;
-      });
+      let results = underTest.findLast(arr, value => value > 30);
 
       expect(results).to.be.equal(50);
 
-      results = underTest.find(arr, function(value) {
-        return value > 100;
-      });
+      results = underTest.find(arr, value => value > 100);
 
       expect(results).to.be.undefined;
 
     });
 
-    it("should findLast on an object", function() {
+    it('should findLast on an object', () => {
 
-      let results = underTest.findLast(obj, function(value) {
-        return value > 30;
-      });
+      let results = underTest.findLast(obj, value => value > 30);
 
       expect(results).to.be.equal(50);
 
-      results = underTest.find(obj, function(value) {
-        return value > 100;
-      });
+      results = underTest.find(obj, value => value > 100);
 
       expect(results).to.be.undefined;
 
     });
 
-    it("should findLast on an object with a next method", function() {
+    it('should findLast on an object with a next method', () => {
 
-      let results = underTest.findLast(gen(), function(value) {
-        return value > 3;
-      });
+      let results = underTest.findLast(gen(), value => value > 3);
 
       expect(results).to.be.equal(5);
 
-      results = underTest.findLast(gen(), function(value) {
-        return value > 10;
-      });
+      results = underTest.findLast(gen(), value => value > 10);
 
       expect(results).to.be.undefined;
 
@@ -960,35 +858,27 @@ describe("test iter module: ", function() {
 
   });
 
-  describe("function findLastIndex", function() {
+  describe('function findLastIndex', () => {
 
-    it("should find on an array", function() {
+    it('should find on an array', () => {
 
-      let results = underTest.findLastIndex(arr, function(value) {
-        return value > 30;
-      });
+      let results = underTest.findLastIndex(arr, value => value > 30);
 
       expect(results).to.be.equal(4);
 
-      results = underTest.findLastIndex(arr, function(value) {
-        return value > 100;
-      });
+      results = underTest.findLastIndex(arr, value => value > 100);
 
       expect(results).to.be.equal(-1);
 
     });
 
-    it("should findLastIndex on an object", function() {
+    it('should findLastIndex on an object', () => {
 
-      let results = underTest.findLastIndex(obj, function(value) {
-        return value > 30;
-      });
+      let results = underTest.findLastIndex(obj, value => value > 30);
 
       expect(results).to.be.equal('fifty');
 
-      results = underTest.findLastIndex(obj, function(value) {
-        return value > 100;
-      });
+      results = underTest.findLastIndex(obj, value => value > 100);
 
       expect(results).to.be.equal(-1);
 
@@ -999,25 +889,21 @@ describe("test iter module: ", function() {
 
 
 
-  describe("function reduce", function() {
+  describe('function reduce', () => {
 
-    it("should reduce on an array", function() {
+    it('should reduce on an array', () => {
 
-      let results = underTest.reduce(arr, function(acc, value) {
-        return acc + value;
-      }, 10);
+      let results = underTest.reduce(arr, (acc, value) => acc + value, 10);
 
       expect(results).to.be.equal(160);
 
-      results = underTest.reduce(arr, function(acc, value) {
-        return acc + value;
-      });
+      results = underTest.reduce(arr, (acc, value) => acc + value);
 
       expect(results).to.be.equal(150);
 
     });
 
-    it("should an reduce on an object", function() {
+    it('should an reduce on an object', () => {
 
       let results = underTest.reduce(obj, function(acc, value, key) {
         return acc + value;
@@ -1025,15 +911,13 @@ describe("test iter module: ", function() {
 
       expect(results).to.be.equal(160);
 
-      results = underTest.reduce(obj, function(acc, value) {
-        return acc + value;
-      });
+      results = underTest.reduce(obj, (acc, value) => acc + value);
 
       expect(results).to.be.equal(150);
 
     });
 
-    it("should an reduce on an object with a next method", function() {
+    it('should an reduce on an object with a next method', () => {
 
       let results = underTest.reduce(gen, function(acc, value, key) {
         return acc + value;
@@ -1041,16 +925,14 @@ describe("test iter module: ", function() {
 
       expect(results).to.be.equal(25);
 
-      results = underTest.reduce(gen, function(acc, value) {
-        return acc + value;
-      });
+      results = underTest.reduce(gen, (acc, value) => acc + value);
 
       expect(results).to.be.equal(15);
 
     });
 
 
-    it("should pass the accumulator correctly", function() {
+    it('should pass the accumulator correctly', () => {
 
       let spy = fakes.spy();
 
@@ -1060,7 +942,7 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should pass the accumulator correctly", function() {
+    it('should pass the accumulator correctly', () => {
 
       let spy = fakes.spy();
 
@@ -1070,21 +952,17 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should handle an empty object", function() {
+    it('should handle an empty object', () => {
 
-      let results = underTest.reduce({}, function(acc, value) {
-        return value > 30;
-      }, 10);
+      let results = underTest.reduce({}, (acc, value) => value > 30, 10);
 
       expect(results).to.be.deep.equal(10);
 
     });
 
-    it("should handle an empty array", function() {
+    it('should handle an empty array', () => {
 
-      let results = underTest.reduce([], function(acc, value) {
-        return value > 30;
-      }, 10);
+      let results = underTest.reduce([], (acc, value) => value > 30, 10);
 
       expect(results).to.be.deep.equal(10);
 
@@ -1093,9 +971,9 @@ describe("test iter module: ", function() {
   });
 
 
-  describe("function sum", function() {
+  describe('function sum', () => {
 
-    it("should sum on an array", function() {
+    it('should sum on an array', () => {
 
       let results = underTest.sum(arr, 10);
 
@@ -1107,7 +985,7 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should an reduce on an object", function() {
+    it('should an reduce on an object', () => {
 
       let results = underTest.sum(obj, 10);
 
@@ -1119,7 +997,7 @@ describe("test iter module: ", function() {
 
     });
 
-    it("should an reduce on an object with a next method", function() {
+    it('should an reduce on an object with a next method', () => {
 
       let results = underTest.sum(gen(), 10);
 
@@ -1133,9 +1011,9 @@ describe("test iter module: ", function() {
 
   });
 
-  describe('function zip', function () {
+  describe('function zip', () => {
 
-    it('should zip a bunch of arrays', function () {
+    it('should zip a bunch of arrays', () => {
 
       let results = underTest.zip(arr, arr, arr);
 
@@ -1143,7 +1021,7 @@ describe("test iter module: ", function() {
 
     });
 
-    it('should zip a bunch of objects', function () {
+    it('should zip a bunch of objects', () => {
 
       let results = underTest.zip(obj, obj, obj);
 
@@ -1151,7 +1029,7 @@ describe("test iter module: ", function() {
 
     });
 
-    it('should zip a bunch of generators', function () {
+    it('should zip a bunch of generators', () => {
 
       let results = underTest.zip(gen(), gen(), gen());
 
@@ -1162,9 +1040,9 @@ describe("test iter module: ", function() {
   });
 
 
-  describe('function chain', function () {
+  describe('function chain', () => {
 
-    it('should create an iterator that iterates over all items', function () {
+    it('should create an iterator that iterates over all items', () => {
 
       let c = underTest.chain(arr, obj, gen);
 
@@ -1190,13 +1068,11 @@ describe("test iter module: ", function() {
   });
 
 
-  describe('function imap', function () {
+  describe('function imap', () => {
 
-    it('should create an iterator that maps over all items of an array', function () {
+    it('should create an iterator that maps over all items of an array', () => {
 
-      let c = underTest.imap(arr, function (v) {
-        return v * 2;
-      });
+      let c = underTest.imap(arr, v => v * 2);
 
       expect(c.next()).to.be.deep.equal({value: [0, 20, Array], done: false});
       expect(c.next()).to.be.deep.equal({value: [1, 40, Array], done: false});
@@ -1206,11 +1082,9 @@ describe("test iter module: ", function() {
       expect(c.next()).to.be.deep.equal({value: undefined, done: true});
     });
 
-    it('should create an iterator that maps over all items of an object', function () {
+    it('should create an iterator that maps over all items of an object', () => {
 
-      let c = underTest.imap(obj, function (v) {
-        return v * 2;
-      });
+      let c = underTest.imap(obj, v => v * 2);
 
       expect(c.next()).to.be.deep.equal({value: ['ten', 20, Object], done: false});
       expect(c.next()).to.be.deep.equal({value: ['twenty', 40, Object], done: false});
@@ -1223,11 +1097,9 @@ describe("test iter module: ", function() {
 
 
 
-    it('should create an iterator that maps over all items of a Map', function () {
+    it('should create an iterator that maps over all items of a Map', () => {
 
-      let c = underTest.imap(map, function (v) {
-        return v * 2;
-      });
+      let c = underTest.imap(map, v => v * 2);
 
       expect(c.next()).to.be.deep.equal({value: ['ten', 20, Map], done: false});
       expect(c.next()).to.be.deep.equal({value: ['twenty', 40, Map], done: false});
@@ -1238,11 +1110,9 @@ describe("test iter module: ", function() {
 
     });
 
-    it('should create an iterator that maps over all items of a Set', function () {
+    it('should create an iterator that maps over all items of a Set', () => {
 
-      let c = underTest.imap(set, function (v) {
-        return v * 2;
-      });
+      let c = underTest.imap(set, v => v * 2);
 
       expect(c.next()).to.be.deep.equal({value: [10, 20, Set], done: false});
       expect(c.next()).to.be.deep.equal({value: [20, 40, Set], done: false});
@@ -1254,11 +1124,9 @@ describe("test iter module: ", function() {
     });
 
 
-    it('should create an iterator that maps over all items of an iterator with no defined return type', function () {
+    it('should create an iterator that maps over all items of an iterator with no defined return type', () => {
 
-      let c = underTest.imap(gen(), function (v) {
-        return v * 2;
-      });
+      let c = underTest.imap(gen(), v => v * 2);
 
       expect(c.next()).to.be.deep.equal({value: [0, 2, underTest.GeneratorFunctionPrototype], done: false});
       expect(c.next()).to.be.deep.equal({value: [1, 4, underTest.GeneratorFunctionPrototype], done: false});
@@ -1269,11 +1137,9 @@ describe("test iter module: ", function() {
 
     });
 
-    it('should create an iterator that maps over all items of an iterator with a Map return type', function () {
+    it('should create an iterator that maps over all items of an iterator with a Map return type', () => {
 
-      let c = underTest.imap(genMap(), function (v) {
-        return v * 2;
-      });
+      let c = underTest.imap(genMap(), v => v * 2);
 
       expect(c.next()).to.be.deep.equal({value: ['one', 2, Map], done: false});
       expect(c.next()).to.be.deep.equal({value: ['two', 4, Map], done: false});
@@ -1284,11 +1150,9 @@ describe("test iter module: ", function() {
 
     });
 
-    it('should create an iterator that maps over all items of an iterator with a Set return type', function () {
+    it('should create an iterator that maps over all items of an iterator with a Set return type', () => {
 
-      let c = underTest.imap(genSet(), function (v) {
-        return v * 2;
-      });
+      let c = underTest.imap(genSet(), v => v * 2);
 
       expect(c.next()).to.be.deep.equal({value: [1, 2, Set], done: false});
       expect(c.next()).to.be.deep.equal({value: [2, 4, Set], done: false});
@@ -1299,11 +1163,9 @@ describe("test iter module: ", function() {
 
     });
 
-    it('should create an iterator that maps over all items of an iterator with an Object return type', function () {
+    it('should create an iterator that maps over all items of an iterator with an Object return type', () => {
 
-      let c = underTest.imap(genObj(), function (v) {
-        return v * 2;
-      });
+      let c = underTest.imap(genObj(), v => v * 2);
 
       expect(c.next()).to.be.deep.equal({value: ['one', 2, Object], done: false});
       expect(c.next()).to.be.deep.equal({value: ['two', 4, Object], done: false});
@@ -1317,30 +1179,24 @@ describe("test iter module: ", function() {
 
   });
 
-  describe('function ifilter', function () {
+  describe('function ifilter', () => {
 
-    it('should create an iterator that filters over all items of an array', function () {
+    it('should create an iterator that filters over all items of an array', () => {
 
-      let c = underTest.ifilter(arr, function (v) {
-        return v > 25;
-      });
+      let c = underTest.ifilter(arr, v => v > 25);
 
       expect(c.next()).to.be.deep.equal({value: [2, 30, Array], done: false});
       expect(c.next()).to.be.deep.equal({value: [3, 40, Array], done: false});
       expect(c.next()).to.be.deep.equal({value: [4, 50, Array], done: false});
       expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
-      c = underTest.ifilter(arr, function (v) {
-        return v < 25;
-      });
+      c = underTest.ifilter(arr, v => v < 25);
 
       expect(c.next()).to.be.deep.equal({value: [0, 10, Array], done: false});
       expect(c.next()).to.be.deep.equal({value: [1, 20, Array], done: false});
       expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
-      c = underTest.ifilter(arr, function (v) {
-        return ((v / 10) % 2 === 0);
-      });
+      c = underTest.ifilter(arr, v => ((v / 10) % 2 === 0));
 
       expect(c.next()).to.be.deep.equal({value: [1, 20, Array], done: false});
       expect(c.next()).to.be.deep.equal({value: [3, 40, Array], done: false});
@@ -1348,28 +1204,70 @@ describe("test iter module: ", function() {
 
     });
 
-    it('should create an iterator that filters over all items of an object', function () {
+    it('should create an iterator that filters over all items of a Map', () => {
 
-      let c = underTest.ifilter(obj, function (v) {
-        return v > 25;
-      });
+      let c = underTest.ifilter(map, v => v > 25);
+
+      expect(c.next()).to.be.deep.equal({value: ['thirty', 30, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: ['forty', 40, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: ['fifty', 50, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+      c = underTest.ifilter(map, v => v < 25);
+
+      expect(c.next()).to.be.deep.equal({value: ['ten', 10, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: ['twenty', 20, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+      c = underTest.ifilter(map, v => ((v / 10) % 2 === 0));
+
+      expect(c.next()).to.be.deep.equal({value: ['twenty', 20, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: ['forty', 40, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+    });
+
+
+    it('should create an iterator that filters over all items of a Set', () => {
+
+      let c = underTest.ifilter(set, v => v > 25);
+
+      expect(c.next()).to.be.deep.equal({value: [30, 30, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: [40, 40, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: [50, 50, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+      c = underTest.ifilter(set, v => v < 25);
+
+      expect(c.next()).to.be.deep.equal({value: [10, 10, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: [20, 20, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+      c = underTest.ifilter(set, v => ((v / 10) % 2 === 0));
+
+      expect(c.next()).to.be.deep.equal({value: [20, 20, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: [40, 40, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+    });
+
+
+    it('should create an iterator that filters over all items of an object', () => {
+
+      let c = underTest.ifilter(obj, v => v > 25);
 
       expect(c.next()).to.be.deep.equal({value: ['thirty', 30, Object], done: false});
       expect(c.next()).to.be.deep.equal({value: ['forty', 40, Object], done: false});
       expect(c.next()).to.be.deep.equal({value: ['fifty', 50, Object], done: false});
       expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
-      c = underTest.ifilter(obj, function (v) {
-        return v < 25;
-      });
+      c = underTest.ifilter(obj, v => v < 25);
 
       expect(c.next()).to.be.deep.equal({value: ['ten', 10, Object], done: false});
       expect(c.next()).to.be.deep.equal({value: ['twenty', 20, Object], done: false});
       expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
-      c = underTest.ifilter(obj, function (v) {
-        return ((v / 10) % 2 === 0);
-      });
+      c = underTest.ifilter(obj, v => ((v / 10) % 2 === 0));
 
       expect(c.next()).to.be.deep.equal({value: ['twenty', 20, Object], done: false});
       expect(c.next()).to.be.deep.equal({value: ['forty', 40, Object], done: false});
@@ -1378,28 +1276,22 @@ describe("test iter module: ", function() {
     });
 
 
-    it('should create an iterator that filters over all items of an iterator with no defined return type', function () {
+    it('should create an iterator that filters over all items of an iterator with no defined return type', () => {
 
-      let c = underTest.ifilter(gen(), function (v) {
-        return v > 2;
-      });
+      let c = underTest.ifilter(gen(), v => v > 2);
 
       expect(c.next()).to.be.deep.equal({value: [2, 3, underTest.GeneratorFunctionPrototype], done: false});
       expect(c.next()).to.be.deep.equal({value: [3, 4, underTest.GeneratorFunctionPrototype], done: false});
       expect(c.next()).to.be.deep.equal({value: [4, 5, underTest.GeneratorFunctionPrototype], done: false});
       expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
-      c = underTest.ifilter(gen(), function (v) {
-        return v < 3;
-      });
+      c = underTest.ifilter(gen(), v => v < 3);
 
       expect(c.next()).to.be.deep.equal({value: [0, 1, underTest.GeneratorFunctionPrototype], done: false});
       expect(c.next()).to.be.deep.equal({value: [1, 2, underTest.GeneratorFunctionPrototype], done: false});
       expect(c.next()).to.be.deep.equal({value: undefined, done: true});
 
-      c = underTest.ifilter(gen(), function (v) {
-        return (v % 2 === 0);
-      });
+      c = underTest.ifilter(gen(), v => (v % 2 === 0));
 
       expect(c.next()).to.be.deep.equal({value: [1, 2, underTest.GeneratorFunctionPrototype], done: false});
       expect(c.next()).to.be.deep.equal({value: [3, 4, underTest.GeneratorFunctionPrototype], done: false});
@@ -1407,120 +1299,182 @@ describe("test iter module: ", function() {
 
     });
 
+
+    it('should create an iterator that filters over all items of an iterator with a Map return type', () => {
+
+      let c = underTest.ifilter(genMap(), v => v > 2);
+
+      expect(c.next()).to.be.deep.equal({value: ['three', 3, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: ['four', 4, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: ['five', 5, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+      c = underTest.ifilter(genMap(), v => v < 3);
+
+      expect(c.next()).to.be.deep.equal({value: ['one', 1, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: ['two', 2, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+      c = underTest.ifilter(genMap(), v => (v % 2 === 0));
+
+      expect(c.next()).to.be.deep.equal({value: ['two', 2, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: ['four', 4, Map], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+    });
+
+
+    it('should create an iterator that filters over all items of an iterator with a Set return type', () => {
+
+      let c = underTest.ifilter(genSet(), v => v > 2);
+
+      expect(c.next()).to.be.deep.equal({value: [3, 3, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: [4, 4, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: [5, 5, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+      c = underTest.ifilter(genSet(), v => v < 3);
+
+      expect(c.next()).to.be.deep.equal({value: [1, 1, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: [2, 2, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+      c = underTest.ifilter(genSet(), v => (v % 2 === 0));
+
+      expect(c.next()).to.be.deep.equal({value: [2, 2, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: [4, 4, Set], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+    });
+
+
+    it('should create an iterator that filters over all items of an iterator with an Object return type', () => {
+
+      let c = underTest.ifilter(genObj(), v => v > 2);
+
+      expect(c.next()).to.be.deep.equal({value: ['three', 3, Object], done: false});
+      expect(c.next()).to.be.deep.equal({value: ['four', 4, Object], done: false});
+      expect(c.next()).to.be.deep.equal({value: ['five', 5, Object], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+      c = underTest.ifilter(genObj(), v => v < 3);
+
+      expect(c.next()).to.be.deep.equal({value: ['one', 1, Object], done: false});
+      expect(c.next()).to.be.deep.equal({value: ['two', 2, Object], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+      c = underTest.ifilter(genObj(), v => (v % 2 === 0));
+
+      expect(c.next()).to.be.deep.equal({value: ['two', 2, Object], done: false});
+      expect(c.next()).to.be.deep.equal({value: ['four', 4, Object], done: false});
+      expect(c.next()).to.be.deep.equal({value: undefined, done: true});
+
+    });
+
+
+  });
+
+  describe('function invoke', () => {
+
+    it('should call the methods on each item in the collection', () => {
+
+      expect(underTest.invoke([1, 2, 3, 4, 5], 'toFixed', 2)).to.deep.equal(['1.00', '2.00', '3.00', '4.00', '5.00']);
+      expect(underTest.invoke([1, 2, 3, 4, 5, 6, 7], 'toString', 2)).to.deep.equal(['1', '10', '11', '100', '101', '110', '111']);
+
+    });
+
+  });
+
+  describe('function pluck', () => {
+
+    it('should pluck the values from an object', () => {
+
+      let data = [{ data : { value : 'foo' } }, { data : { value : 'bar' } }, {}, { value : 'blim' }, { data : { value : 'blam' } }];
+      expect( underTest.pluck( data, 'data.value' ) ).to.deep.equal( ["foo", "bar", undefined, undefined, "blam"] );
+
+      expect( underTest.pluck( data, 'data.value', true ) ).to.deep.equal( ["foo", "bar", "blam"] );
+
+      expect( underTest.pluck( [
+        { 'one' : 1, 'two' : 2, 'three' : 3 },
+        { 'one' : 1, 'two' : 2, 'three' : 3 },
+        { 'one' : 1, 'two' : 2, 'three' : 3 }
+      ], 'two' ) ).to.deep.equal( [2, 2, 2] );
+
+      expect( underTest.pluck( [
+        { 'one' : 1,         'two' : 2, 'three' : 3 },
+        { 'one' : undefined, 'two' : 2, 'three' : 3 },
+        { 'one' : 1,         'two' : 2, 'three' : 3 },
+        { 'one' : null,      'two' : 2, 'three' : 3 },
+        { 'one' : 1,         'two' : 2, 'three' : 3 }
+      ], 'one', true ) ).to.deep.equal( [1, 1, 1] );
+
+      expect( underTest.pluck( underTest.pluck( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map( function( o, i ) {
+        return { src : { val : i } };
+      } ), 'src' ), 'val' ) ).to.deep.equal( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] );
+
+      expect( underTest.pluck( underTest.pluck( underTest.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
+        return { src : { val : { id : i % 2 ? i : null } } };
+      } ), 'src' ), 'val' ), 'id', true ) ).to.deep.equal( [1, 3, 5, 7, 9] );
+
+      expect( underTest.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
+        return { src : { val : i } };
+      } ), 'src.val' ) ).to.deep.equal( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] );
+
+      expect( underTest.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
+        return { src : { val : { id : i % 2 ? i : null } } };
+      } ), 'src.val.id', true ) ).to.deep.equal( [1, 3, 5, 7, 9] );
+
+    });
+
   });
 
 
-  it('function invoke', function() {
+  describe('function takeWhile', () => {
 
-    expect(underTest.invoke([1, 2, 3, 4, 5], 'toFixed', 2)).to.deep.equal(['1.00', '2.00', '3.00', '4.00', '5.00']);
-    expect(underTest.invoke([1, 2, 3, 4, 5, 6, 7], 'toString', 2)).to.deep.equal(['1', '10', '11', '100', '101', '110', '111']);
+    it('should takeWhile on an array', () => {
 
-  });
-
-
-  it( 'function pluck', function() {
-    let data = [{ data : { value : 'foo' } }, { data : { value : 'bar' } }, {}, { value : 'blim' }, { data : { value : 'blam' } }];
-    expect( underTest.pluck( data, 'data.value' ) ).to.deep.equal( ["foo", "bar", undefined, undefined, "blam"] );
-
-    expect( underTest.pluck( data, 'data.value', true ) ).to.deep.equal( ["foo", "bar", "blam"] );
-
-    expect( underTest.pluck( [
-      { 'one' : 1, 'two' : 2, 'three' : 3 },
-      { 'one' : 1, 'two' : 2, 'three' : 3 },
-      { 'one' : 1, 'two' : 2, 'three' : 3 }
-    ], 'two' ) ).to.deep.equal( [2, 2, 2] );
-
-    expect( underTest.pluck( [
-      { 'one' : 1,         'two' : 2, 'three' : 3 },
-      { 'one' : undefined, 'two' : 2, 'three' : 3 },
-      { 'one' : 1,         'two' : 2, 'three' : 3 },
-      { 'one' : null,      'two' : 2, 'three' : 3 },
-      { 'one' : 1,         'two' : 2, 'three' : 3 }
-    ], 'one', true ) ).to.deep.equal( [1, 1, 1] );
-
-    expect( underTest.pluck( underTest.pluck( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map( function( o, i ) {
-      return { src : { val : i } };
-    } ), 'src' ), 'val' ) ).to.deep.equal( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] );
-
-    expect( underTest.pluck( underTest.pluck( underTest.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
-      return { src : { val : { id : i % 2 ? i : null } } };
-    } ), 'src' ), 'val' ), 'id', true ) ).to.deep.equal( [1, 3, 5, 7, 9] );
-
-    expect( underTest.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
-      return { src : { val : i } };
-    } ), 'src.val' ) ).to.deep.equal( [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] );
-
-    expect( underTest.pluck( [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map( function( o, i ) {
-      return { src : { val : { id : i % 2 ? i : null } } };
-    } ), 'src.val.id', true ) ).to.deep.equal( [1, 3, 5, 7, 9] );
-
-  });
-
-
-  describe("function takeWhile", function() {
-
-    it("should takeWhile on an array", function() {
-
-      let results = underTest.takeWhile(arr, function (v) {
-        return v < 40;
-      });
+      let results = underTest.takeWhile(arr, v => v < 40);
 
       expect(results).to.deep.equal([10, 20, 30]);
 
-      results = underTest.takeWhile(arr, function (v) {
-        return v < 100;
-      });
+      results = underTest.takeWhile(arr, v => v < 100);
 
       expect(results).to.deep.equal([10, 20, 30, 40, 50]);
 
-      results = underTest.takeWhile(arr, function (v) {
-        return v < 10;
-      });
+      results = underTest.takeWhile(arr, v => v < 10);
 
       expect(results).to.deep.equal([]);
 
 
     });
 
-    it("should takeWhile on an object", function() {
+    it('should takeWhile on an object', () => {
 
-      let results = underTest.takeWhile(obj, function (v, k) {
-        return v < 40;
-      });
+      let results = underTest.takeWhile(obj, v => v < 40);
 
       expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30});
 
-      results = underTest.takeWhile(obj, function (v, k) {
-        return v < 100;
-      });
+      results = underTest.takeWhile(obj, v => v < 100);
 
       expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30, forty: 40, fifty: 50});
 
-      results = underTest.takeWhile(obj, function (v, k) {
-        return v < 10;
-      });
+      results = underTest.takeWhile(obj, v => v < 10);
 
       expect(results).to.deep.equal({});
 
     });
 
-    it("should takeWhile on an object with a next method", function() {
+    it('should takeWhile on an object with a next method', () => {
 
-      let results = underTest.takeWhile(gen, function (v, k) {
-        return v < 4;
-      });
+      let results = underTest.takeWhile(gen, v => v < 4);
 
       expect(results).to.deep.equal([1, 2 ,3]);
 
-      results = underTest.takeWhile(gen, function (v, k) {
-        return v < 10;
-      });
+      results = underTest.takeWhile(gen, v => v < 10);
 
       expect(results).to.deep.equal([1, 2 ,3, 4, 5]);
 
-      results = underTest.takeWhile(gen, function (v, k) {
-        return v < 1;
-      });
+      results = underTest.takeWhile(gen, v => v < 1);
 
       expect(results).to.deep.equal([]);
 
@@ -1528,70 +1482,52 @@ describe("test iter module: ", function() {
 
   });
 
-  describe("function dropWhile", function() {
+  describe('function dropWhile', () => {
 
-    it("should dropWhile on an array", function() {
+    it('should dropWhile on an array', () => {
 
-      let results = underTest.dropWhile(arr, function (v) {
-        return v < 40;
-      });
+      let results = underTest.dropWhile(arr, v => v < 40);
 
       expect(results).to.deep.equal([40, 50]);
 
-      results = underTest.dropWhile(arr, function (v) {
-        return v < 100;
-      });
+      results = underTest.dropWhile(arr, v => v < 100);
 
       expect(results).to.deep.equal([]);
 
-      results = underTest.dropWhile(arr, function (v) {
-        return v < 10;
-      });
+      results = underTest.dropWhile(arr, v => v < 10);
 
       expect(results).to.deep.equal([10, 20, 30, 40, 50]);
 
 
     });
 
-    it("should dropWhile on an object", function() {
+    it('should dropWhile on an object', () => {
 
-      let results = underTest.dropWhile(obj, function (v, k) {
-        return v < 40;
-      });
+      let results = underTest.dropWhile(obj, v => v < 40);
 
       expect(results).to.deep.equal({forty: 40, fifty: 50});
 
-      results = underTest.dropWhile(obj, function (v, k) {
-        return v < 100;
-      });
+      results = underTest.dropWhile(obj, v => v < 100);
 
       expect(results).to.deep.equal({});
 
-      results = underTest.dropWhile(obj, function (v, k) {
-        return v < 10;
-      });
+      results = underTest.dropWhile(obj, v => v < 10);
 
       expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30, forty: 40, fifty: 50});
 
     });
 
-    it("should dropWhile on an object with a next method", function() {
+    it('should dropWhile on an object with a next method', () => {
 
-      let results = underTest.dropWhile(gen, function (v, k) {
-        return v < 4;
-      });
+      let results = underTest.dropWhile(gen, v => v < 4);
 
       expect(results).to.deep.equal([4, 5]);
 
-      results = underTest.dropWhile(gen, function (v, k) {
-        return v < 10;
-      });
+      results = underTest.dropWhile(gen, v => v < 10);
 
       expect(results).to.deep.equal([]);
 
-      results = underTest.dropWhile(gen, function (v, k) {
-        return v < 1;
-      });
+      results = underTest.dropWhile(gen, v => v < 1);
 
       expect(results).to.deep.equal([1, 2 ,3, 4, 5]);
 
