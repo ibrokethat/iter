@@ -1040,7 +1040,14 @@ describe("test iter module: ", () => {
   });
 
 
-  describe('function chain', () => {
+  describe.only('function chain', () => {
+
+    it('should error if passed objects of different types', () => {
+
+      expect(() => underTest.chain(map, set, arr)).to.throw;
+
+    });
+
 
     it('should create an iterator that iterates over all items', () => {
 
