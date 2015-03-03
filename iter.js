@@ -271,7 +271,7 @@ export function map (...args) {
 export function first (o, fn) {
 
   let r;
-  forEach(o, function (v, k) {
+  forEach(o, (v, k) => {
     if (fn(v, k)) {
       r = [v, k];
       throw StopIteration;
@@ -284,7 +284,7 @@ export function first (o, fn) {
 export function last (o, fn) {
 
   let r;
-  forEach(o, function (v, k) {
+  forEach(o, (v, k) => {
     if (fn(v, k)) {
       r = [v, k];
     }
@@ -305,9 +305,6 @@ export function last (o, fn) {
 */
 export function some (o, fn) {
 
-  if (typeof o.some === 'function') {
-    return o.some(fn);
-  }
   return !! first(o, fn);
 }
 
@@ -323,10 +320,6 @@ export function some (o, fn) {
 */
 export function every (o, fn) {
 
-  if (typeof o.every === 'function') {
-    return o.every(fn);
-  }
-
   return !(!! first(o, negate.bind(null, fn)));
 }
 
@@ -339,10 +332,6 @@ export function every (o, fn) {
   @return       {int|string}
 */
 export function indexOf (o, el) {
-
-  if (typeof o.indexOf === 'function') {
-    return o.indexOf(el);
-  }
 
   let r = first(o, eq.bind(null, el));
   return r ? r[1] : -1;
@@ -358,10 +347,6 @@ export function indexOf (o, el) {
 */
 export function findIndex (o, fn) {
 
-  if (typeof o.findIndex === 'function') {
-    return o.findIndex(fn);
-  }
-
   let r = first(o, fn);
   return r ? r[1] : -1;
 }
@@ -375,10 +360,6 @@ export function findIndex (o, fn) {
 */
 export function find (o, fn) {
 
-  if (typeof o.find === 'function') {
-    return o.find(fn);
-  }
-
   let r = first(o, fn);
   return r ? r[0] : undefined;
 }
@@ -391,10 +372,6 @@ export function find (o, fn) {
   @return       {int|string}
 */
 export function lastIndexOf (o, el) {
-
-  if (typeof o.lastIndexOf === 'function') {
-    return o.lastIndexOf(el);
-  }
 
   let r = last(o, eq.bind(null, el));
   return r ? r[1] : -1;
@@ -436,9 +413,9 @@ export function findLast (o, fn) {
 export function takeWhile (o, fn) {
 
   let r = returns(o);
-  forEach(o, function (v, k) {
+  forEach(o, (v, k, type) => {
     if (fn(v, k)) {
-      r.set(v, k);
+      r.set(v, k, type);
     }
     else {
       throw StopIteration;
@@ -458,12 +435,12 @@ export function dropWhile (o, fn) {
 
   let r = returns(o);
   let take = false;
-  forEach(o, function (v, k) {
+  forEach(o, (v, k, type) => {
 
     take = take || !fn(v, k);
 
     if (take) {
-      r.set(v, k);
+      r.set(v, k, type);
     }
   });
   return r.get();
@@ -497,21 +474,21 @@ export function reduce (o, fn, acc){
   let noAcc = typeof acc === 'undefined';
   let iterable;
 
-  if(typeof o.reduce === 'function') {
+  // if(typeof o.reduce === 'function') {
 
-    return noAcc ? o.reduce(fn) : o.reduce(fn, acc);
-  }
+  //   return noAcc ? o.reduce(fn) : o.reduce(fn, acc);
+  // }
 
   if (noAcc) {
 
     iterable = iterator(o);
-    let r = iterable.next();
+    let data = iterable.next();
 
-    if (r.done) {
+    if (data.done) {
       throw new TypeError("reduce() of sequence with no initial value");
     }
     else {
-      acc = r.value;
+      acc = data.value[1];
     }
 
   }
@@ -519,7 +496,7 @@ export function reduce (o, fn, acc){
     iterable = o;
   }
 
-  forEach(iterable, function(value, key){
+  forEach(iterable, (value, key) => {
     acc = fn(acc, value, key);
   });
 
@@ -605,20 +582,18 @@ export function sum (o, acc) {
   todo - map over the longest arg
        - throw if args are not the same
 */
-export function zip () {
+export function zip (...args) {
 
-
-  let args = arguments;
   let r = returns(args[0]);
 
-  forEach(args[0], function (v, k) {
+  forEach(args[0], function (v, k, type) {
 
     let values = [v];
     let i = 0;
     while (++i < args.length) {
-      values.push(typeof args[i].next === 'function' ? args[i].next().value : args[i][k]);
+      values.push(typeof args[i].next === 'function' ? args[i].next().value[1] : args[i][k]);
     }
-    r.set(values, k);
+    r.set(values, k, type);
   });
 
   return r.get();
@@ -631,45 +606,19 @@ export function zip () {
 //   return args;
 // });
 
-/**
-  @description  creates an iterable object that iterates over all it's parameter objects
-  @param        {array} args
-  @return       {iterable}
-*/
-export function chain2 (args) {
+function argsOfType (...args) {
 
-  if(args.length === 1) {
-    return iterator(args[0]);
+  let i = 0;
+  let l = args.length - 1;
+
+  while (i < l) {
+    if (args[i].constructor !== args[++i].constructor) {
+      throw new TypeError('arguments must be of same type');
+    }
   }
 
-  let iterables = map(args, iterator);
-
-  return {
-
-    next: function() {
-
-      let data = iterables[0].next();
-
-      if (!data.done) {
-        return data;
-      }
-      else {
-
-        if (iterables.length === 1) {
-          return data;
-        }
-
-        iterables.shift();
-
-        return {
-          value: data.value,
-          done: false
-        };
-      }
-    }
-
-  };
 }
+
 
 export function* chain (...args) {
 

@@ -917,6 +917,35 @@ describe("test iter module: ", () => {
 
     });
 
+    it('should an reduce on a Map', () => {
+
+      let results = underTest.reduce(map, function(acc, value, key) {
+        return acc + value;
+      }, 10);
+
+      expect(results).to.be.equal(160);
+
+      results = underTest.reduce(map, (acc, value) => acc + value);
+
+      expect(results).to.be.equal(150);
+
+    });
+
+    it('should an reduce on a Set', () => {
+
+      let results = underTest.reduce(set, function(acc, value, key) {
+        return acc + value;
+      }, 10);
+
+      expect(results).to.be.equal(160);
+
+      results = underTest.reduce(set, (acc, value) => acc + value);
+
+      expect(results).to.be.equal(150);
+
+    });
+
+
     it('should an reduce on an object with a next method', () => {
 
       let results = underTest.reduce(gen, function(acc, value, key) {
@@ -1040,34 +1069,27 @@ describe("test iter module: ", () => {
   });
 
 
-  describe.only('function chain', () => {
+  describe('function chain', () => {
 
-    it('should error if passed objects of different types', () => {
+    it('should create an iterator that iterates over all arrays', () => {
 
-      expect(() => underTest.chain(map, set, arr)).to.throw;
+      let c = underTest.chain(arr, arr, arr);
 
-    });
-
-
-    it('should create an iterator that iterates over all items', () => {
-
-      let c = underTest.chain(arr, obj, gen);
-
-      expect(c.next()).to.be.deep.equal({value:10, done: false});
-      expect(c.next()).to.be.deep.equal({value:20, done: false});
-      expect(c.next()).to.be.deep.equal({value:30, done: false});
-      expect(c.next()).to.be.deep.equal({value:40, done: false});
-      expect(c.next()).to.be.deep.equal({value:50, done: false});
-      expect(c.next()).to.be.deep.equal({value:10, done: false});
-      expect(c.next()).to.be.deep.equal({value:20, done: false});
-      expect(c.next()).to.be.deep.equal({value:30, done: false});
-      expect(c.next()).to.be.deep.equal({value:40, done: false});
-      expect(c.next()).to.be.deep.equal({value:50, done: false});
-      expect(c.next()).to.be.deep.equal({value:1, done: false});
-      expect(c.next()).to.be.deep.equal({value:2, done: false});
-      expect(c.next()).to.be.deep.equal({value:3, done: false});
-      expect(c.next()).to.be.deep.equal({value:4, done: false});
-      expect(c.next()).to.be.deep.equal({value:5, done: false});
+      expect(c.next()).to.be.deep.equal({value:[0, 10], done: false});
+      expect(c.next()).to.be.deep.equal({value:[1, 20], done: false});
+      expect(c.next()).to.be.deep.equal({value:[2, 30], done: false});
+      expect(c.next()).to.be.deep.equal({value:[3, 40], done: false});
+      expect(c.next()).to.be.deep.equal({value:[4, 50], done: false});
+      expect(c.next()).to.be.deep.equal({value:[0, 10], done: false});
+      expect(c.next()).to.be.deep.equal({value:[1, 20], done: false});
+      expect(c.next()).to.be.deep.equal({value:[2, 30], done: false});
+      expect(c.next()).to.be.deep.equal({value:[3, 40], done: false});
+      expect(c.next()).to.be.deep.equal({value:[4, 50], done: false});
+      expect(c.next()).to.be.deep.equal({value:[0, 10], done: false});
+      expect(c.next()).to.be.deep.equal({value:[1, 20], done: false});
+      expect(c.next()).to.be.deep.equal({value:[2, 30], done: false});
+      expect(c.next()).to.be.deep.equal({value:[3, 40], done: false});
+      expect(c.next()).to.be.deep.equal({value:[4, 50], done: false});
       expect(c.next()).to.be.deep.equal({value:undefined, done: true});
 
     });
@@ -1483,7 +1505,7 @@ describe("test iter module: ", () => {
 
       results = underTest.takeWhile(gen, v => v < 1);
 
-      expect(results).to.deep.equal([]);
+      expect(results).to.deep.equal(null);
 
     });
 
@@ -1532,7 +1554,7 @@ describe("test iter module: ", () => {
 
       results = underTest.dropWhile(gen, v => v < 10);
 
-      expect(results).to.deep.equal([]);
+      expect(results).to.deep.equal(null);
 
       results = underTest.dropWhile(gen, v => v < 1);
 
