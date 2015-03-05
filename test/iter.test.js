@@ -1,6 +1,6 @@
 import assert from 'assert';
 import sinon from 'sinon';
-import * as underTest from '../iter';
+import * as underTest from '../src/iter';
 
 import {expect} from 'chai';
 

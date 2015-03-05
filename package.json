@@ -27,10 +27,12 @@
     "type": "git",
     "url": "git@github.com:ibrokethat/iter"
   },
-  "main": "iter.js",
+  "main": "lib/iter.js",
   "scripts": {
     "prepublish": "npm prune",
-    "test": "./node_modules/.bin/mocha --compilers js:./test/babel --blacklist regenerator --harmony --colors --recursive -R spec --ui bdd ./test/**/*.test.js --NODE_ENV=test"
+    "build":"./node_modules/.bin/babel --blacklist regenerator,es6.forOf src --out-dir lib" ,
+    "test": "./node_modules/.bin/mocha --compilers js:./test/babel --blacklist regenerator,es6.forOf --harmony --colors --recursive -R spec --ui bdd ./test/**/*.test.js --NODE_ENV=test",
+    "t": "--loose all "
   },
   "engines": {
     "node": "0.12.x"
