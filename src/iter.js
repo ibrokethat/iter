@@ -172,6 +172,11 @@ export function exhaust (o) {
 }
 
 
+export function collect (o) {
+  return map(o, (v) => v);
+}
+
+
 /**
   @descrption   calls a function on each item in an object and returns the item if 'true'
   @param        {o} object
@@ -182,10 +187,13 @@ export function filter (o, fn) {
   let r = returns(o);
 
   forEach(o, (v, k, type) => {
+
     if (fn(v, k)) {
+
       r.set(v, k, type);
     }
   });
+
   return r.get();
 }
 
@@ -199,18 +207,19 @@ export function filter (o, fn) {
 */
 export function* ifilter (o, fn) {
 
-
+  let type = o.constructor;
   let iterable = iterator(o);
   let data = iterable.next();
-  let type = o.constructor;
 
   while (!data.done) {
 
     let [k, v, t] = data.value;
 
     if (fn(v, k)) {
+
       yield [k, v, t || type];
     }
+
     data = iterable.next();
   }
 }
@@ -231,42 +240,16 @@ export function map (...args) {
     let [o, fn] = args;
 
     let r = returns(o);
+
     forEach(o, (v, k, type) => {
       r.set(fn(v, k), k, type);
     });
-    return r.get();
 
+    return r.get();
   }
   else {
 
-    let fn = args.pop();
-    let r = returns(args[0]);
-    let iterables = map(args, iterator);
-
-    let it = {
-
-      [Symbol.iterator]: function* () {
-
-        let data = invoke(iterables, 'next');
-
-        while (filter(data, (v) => v.done).length === 0) {
-
-          let [k, , type] = data[0].value;
-
-          let v = fn(...pluck(data, 'value.1'));
-
-          r.set(v, k, type);
-          yield [k, v, type];
-
-          data = invoke(iterables, 'next');
-        }
-      }
-
-    };
-
-    exhaust(it);
-
-    return r.get();
+    return collect(imap(...args));
   }
 
 }
@@ -278,21 +261,46 @@ export function map (...args) {
   @param        {function} fn
   @return       {iterable}
 */
-export function* imap (o, fn) {
+export function* imap (...args) {
 
-  let iterable = iterator(o);
-  let data = iterable.next();
-  let type = o.constructor;
+  if (args.length === 2) {
 
-  while (!data.done) {
+    let [o, fn] = args;
 
-    let [k, v, t] = data.value;
+    let iterable = iterator(o);
+    let data = iterable.next();
+    let type = o.constructor;
 
-    yield [k, fn(v, k), t || type];
-    data = iterable.next();
+    while (!data.done) {
+
+      let [k, v, t] = data.value;
+
+      yield [k, fn(v, k), t || type];
+
+      data = iterable.next();
+    }
+
+  }
+  else {
+
+    let fn = args.pop();
+    let type = args[0].constructor;
+    let iterables = map(args, iterator);
+    let data = invoke(iterables, 'next');
+
+    while (filter(data, (v) => v.done).length === 0) {
+
+      let [k, , t] = data[0].value;
+
+      let v = fn(...pluck(data, 'value.1'));
+
+      yield [k, v, t || type];
+
+      data = invoke(iterables, 'next');
+    }
+
   }
 }
-
 
 
 
@@ -612,6 +620,22 @@ export function zip (...args) {
 }
 
 
+/*
+  @description  adds the value of each index from each object into an array
+  @param        {object} o
+  @param        {any} [ret]
+  @return       {number}
+*/
+export function izip (...args) {
+
+  if (args.length === 1) {
+    return args[0];
+  }
+
+  return imap(...args, (...v) => v);
+}
+
+
 
 export function* chain (...args) {
 
@@ -665,7 +689,7 @@ export function partition (o, fn) {
 
   let iterable = iterator(o);
   let data = iterable.next();
-  let s = returns(o);
+  let t = returns(o);
   let f = returns(o);
 
   while (!data.done) {
@@ -673,7 +697,7 @@ export function partition (o, fn) {
     let [k, v, type] = data.value;
 
     if (fn(v, k)) {
-      s.set(v, k, type);
+      t.set(v, k, type);
     }
     else {
       f.set(v, k, type);
@@ -682,7 +706,7 @@ export function partition (o, fn) {
     data = iterable.next();
   }
 
-  return [s.get(), f.get()];
+  return [t.get(), f.get()];
 
 }
 

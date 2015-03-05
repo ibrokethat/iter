@@ -1677,18 +1677,18 @@ describe("test iter module: ", () => {
 
     it('should partition an array', () => {
 
-      let [s, f] = underTest.partition(arr, v => v > 20);
+      let [t, f] = underTest.partition(arr, v => v > 20);
 
-      expect(s).to.deep.equal([30, 40, 50]);
+      expect(t).to.deep.equal([30, 40, 50]);
       expect(f).to.deep.equal([10, 20]);
 
     });
 
     it('should partition an object', () => {
 
-      let [s, f] = underTest.partition(obj, v => v > 20);
+      let [t, f] = underTest.partition(obj, v => v > 20);
 
-      expect(s).to.deep.equal({thirty: 30, forty: 40, fifty: 50});
+      expect(t).to.deep.equal({thirty: 30, forty: 40, fifty: 50});
       expect(f).to.deep.equal({ten:10, twenty: 20});
 
     });
