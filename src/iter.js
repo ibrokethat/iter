@@ -64,6 +64,31 @@ function returns (o) {
 
 
 
+function curry (fn) {
+
+  return (...args) => {
+
+    switch (args.length) {
+
+      case 0:
+
+        throw new Error('NO_ARGS_EXCEPTION');
+
+      case 1:
+
+        let fn1 = args[0];
+
+        return (...args) => fn(...args, fn1);
+
+      default:
+
+        return fn(...args);
+    };
+
+  };
+}
+
+
 /**
   @description  creates an iterable object from another object
   @param        {object} object
@@ -115,7 +140,7 @@ export function iterator (object) {
   @param        {fn} function
 */
 
-export function forEach (o, fn) {
+function _forEach (o, fn) {
 
 
   try {
@@ -163,6 +188,8 @@ export function forEach (o, fn) {
 
 }
 
+export const forEach = curry(_forEach);
+
 
 export function exhaust (o) {
   forEach(o, () => {});
@@ -179,7 +206,7 @@ export function collect (o) {
   @param        {o} object
   @param        {fn} function
 */
-export function filter (o, fn) {
+function _filter (o, fn) {
 
   let r = returns(o);
 
@@ -194,6 +221,8 @@ export function filter (o, fn) {
   return r.get();
 }
 
+export const filter = curry(_filter);
+
 
 
 /**
@@ -202,7 +231,7 @@ export function filter (o, fn) {
   @param        {function} fn
   @return       {iterable}
 */
-export function* ifilter (o, fn) {
+function* _ifilter (o, fn) {
 
   let type = o.constructor;
   let iterable = iterator(o);
@@ -222,7 +251,7 @@ export function* ifilter (o, fn) {
 }
 
 
-
+export const ifilter = curry(_ifilter);
 
 /**
   @descrption   calls a function on each item in an object and returns the result
@@ -230,7 +259,7 @@ export function* ifilter (o, fn) {
   @param        {fn} function
   @return       {object|array}
 */
-export function map (...args) {
+function _map (...args) {
 
   if (args.length === 2) {
 
@@ -252,13 +281,16 @@ export function map (...args) {
 }
 
 
+export const map = curry(_map);
+
+
 /**
   @description  creates an iterator map
   @param        {object} o
   @param        {function} fn
   @return       {iterable}
 */
-export function* imap (...args) {
+function* _imap (...args) {
 
   if (args.length === 2) {
 
@@ -299,6 +331,8 @@ export function* imap (...args) {
   }
 }
 
+
+export const imap = curry(_imap);
 
 
 export function first (o, fn) {
@@ -443,7 +477,7 @@ export function findLast (o, fn) {
   @param        {fn} funtion
   @return       {int|string}
 */
-export function takeWhile (o, fn) {
+function _takeWhile (o, fn) {
 
   let r = returns(o);
   forEach(o, (v, k, type) => {
@@ -456,6 +490,8 @@ export function takeWhile (o, fn) {
   });
   return r.get();
 }
+
+export const takeWhile = curry(_takeWhile);
 
 export function take (o, n = 1) {
 

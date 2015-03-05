@@ -1,3 +1,5 @@
+"use strict";
+
 import assert from 'assert';
 import sinon from 'sinon';
 import * as underTest from '../src/iter';
@@ -196,7 +198,7 @@ describe("test iter module: ", () => {
   });
 
 
-  describe('function forEach', () => {
+  describe.only('function forEach', () => {
 
     it('should iterate over the iterator returned from the Array.prototype.entries method', () => {
 
