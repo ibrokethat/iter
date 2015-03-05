@@ -515,7 +515,7 @@ describe("test iter module: ", () => {
     });
 
 
-    it('should filter on an object with a next method with a Map return type', () => {
+    it('should map on an object with a next method with a Map return type', () => {
 
       let results = underTest.map(genMap(), value => value * 2);
 
@@ -530,7 +530,7 @@ describe("test iter module: ", () => {
     });
 
 
-    it('should filter on an object with a next method with a Set return type', () => {
+    it('should map on an object with a next method with a Set return type', () => {
 
       let results = underTest.map(genSet(), value => value * 2);
 
@@ -577,6 +577,21 @@ describe("test iter module: ", () => {
       expect(results.size).to.be.equal(0);
     });
 
+    it('should map multiple arrays', () => {
+
+      let results = underTest.map(arr, arr, arr, (v1, v2, v3) => v1 + v2 + v3);
+
+      expect(results).to.be.deep.equal([30, 60, 90, 120, 150]);
+
+    });
+
+    it('should map multiple objects', () => {
+
+      let results = underTest.map(obj, obj, obj, (v1, v2, v3) => v1 + v2 + v3);
+
+      expect(results).to.be.deep.equal({ten: 30, twenty: 60, thirty: 90, forty: 120, fifty: 150});
+
+    });
 
   });
 
@@ -1559,6 +1574,122 @@ describe("test iter module: ", () => {
       results = underTest.dropWhile(gen, v => v < 1);
 
       expect(results).to.deep.equal([1, 2 ,3, 4, 5]);
+
+    });
+
+  });
+
+
+  describe('function take', () => {
+
+    it('should take on an array', () => {
+
+      let results = underTest.take(arr);
+
+      expect(results).to.deep.equal([10]);
+
+      results = underTest.take(arr, 3);
+
+      expect(results).to.deep.equal([10, 20, 30]);
+
+    });
+
+    // it('should throw on an object', () => {
+
+    //   let results = underTest.takeWhile(obj, v => v < 40);
+
+    //   expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30});
+
+    //   results = underTest.takeWhile(obj, v => v < 100);
+
+    //   expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30, forty: 40, fifty: 50});
+
+    //   results = underTest.takeWhile(obj, v => v < 10);
+
+    //   expect(results).to.deep.equal({});
+
+    // });
+
+    it('should take on an object with a next method', () => {
+
+      let results = underTest.take(gen);
+
+      expect(results).to.deep.equal([1]);
+
+      results = underTest.take(gen, 3);
+
+      expect(results).to.deep.equal([1, 2 , 3]);
+
+
+    });
+
+  });
+
+
+  describe('function drop', () => {
+
+    it('should take on an array', () => {
+
+      let results = underTest.drop(arr);
+
+      expect(results).to.deep.equal([20, 30, 40, 50]);
+
+      results = underTest.drop(arr, 3);
+
+      expect(results).to.deep.equal([40, 50]);
+
+    });
+
+    // it('should throw on an object', () => {
+
+    //   let results = underTest.takeWhile(obj, v => v < 40);
+
+    //   expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30});
+
+    //   results = underTest.takeWhile(obj, v => v < 100);
+
+    //   expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30, forty: 40, fifty: 50});
+
+    //   results = underTest.takeWhile(obj, v => v < 10);
+
+    //   expect(results).to.deep.equal({});
+
+    // });
+
+    it('should drop on an object with a next method', () => {
+
+      let results = underTest.drop(gen);
+
+      expect(results).to.deep.equal([2, 3, 4, 5]);
+
+      results = underTest.drop(gen, 3);
+
+      expect(results).to.deep.equal([4, 5]);
+
+
+    });
+
+  });
+
+
+
+  describe('function partition', () => {
+
+    it('should partition an array', () => {
+
+      let [s, f] = underTest.partition(arr, v => v > 20);
+
+      expect(s).to.deep.equal([30, 40, 50]);
+      expect(f).to.deep.equal([10, 20]);
+
+    });
+
+    it('should partition an object', () => {
+
+      let [s, f] = underTest.partition(obj, v => v > 20);
+
+      expect(s).to.deep.equal({thirty: 30, forty: 40, fifty: 50});
+      expect(f).to.deep.equal({ten:10, twenty: 20});
 
     });
 

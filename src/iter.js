@@ -1,7 +1,19 @@
-/**
-  @module   iteration methods
-*/
 "use strict";
+
+/*
+  todo
+
+    imap -> multiple items
+    izip
+    itakeWhile
+    idropWhile
+
+    groupBy
+    intersection
+
+
+*/
+
 
 const StopIteration = new Error();
 
@@ -155,6 +167,10 @@ export function forEach (o, fn) {
 }
 
 
+export function exhaust (o) {
+  forEach(o, () => {});
+}
+
 
 /**
   @descrption   calls a function on each item in an object and returns the item if 'true'
@@ -172,6 +188,34 @@ export function filter (o, fn) {
   });
   return r.get();
 }
+
+
+
+/**
+  @description  creates an iterator filter
+  @param        {object} o
+  @param        {function} fn
+  @return       {iterable}
+*/
+export function* ifilter (o, fn) {
+
+
+  let iterable = iterator(o);
+  let data = iterable.next();
+  let type = o.constructor;
+
+  while (!data.done) {
+
+    let [k, v, t] = data.value;
+
+    if (fn(v, k)) {
+      yield [k, v, t || type];
+    }
+    data = iterable.next();
+  }
+}
+
+
 
 
 /**
@@ -195,76 +239,60 @@ export function map (...args) {
   }
   else {
 
-    let args = toArray(arguments);
-    args.pop();
+    let fn = args.pop();
     let r = returns(args[0]);
+    let iterables = map(args, iterator);
 
-    if (typeof args[0].next === 'function') {
+    let it = {
 
-      let l = args.length;
-      let done = 0;
-      let i = 0;
+      [Symbol.iterator]: function* () {
 
-      let data;
-      let value;
-      let key;
-      let values = [];
+        let data = invoke(iterables, 'next');
 
-      while (i < l) {
+        while (filter(data, (v) => v.done).length === 0) {
 
-        data = args[i].next();
-        value = data.value[0];
-        key = data.value[1];
-        values.push(value);
-        i++;
+          let [k, , type] = data[0].value;
 
-        if (data.done) {
-          done = done + 1;
+          let v = fn(...pluck(data, 'value.1'));
+
+          r.set(v, k, type);
+          yield [k, v, type];
+
+          data = invoke(iterables, 'next');
         }
-        if (i === l) {
-          i = 0;
-          values.push(key);
-          r.set(fn.apply(null, values), key);
-          values = [];
-          if (done === l) {
-            break;
-          }
-        }
-
       }
 
-    }
-    else {
+    };
 
-      let longest = (function (args) {
-        let l = 0;
-        reduce(args, function (acc, arg, i) {
+    exhaust(it);
 
-          if (arg > acc) {
-            l = i;
-          }
-          return arg;
-
-        }, typeof args[0].length === 'number' ? args[0].length : Object.key(args[0].length))
-        return l;
-      }());
-
-      forEach(args[longest], function (v, k) {
-
-        let values = [];
-        let i = 0;
-        while (i++ < args.length) {
-          values.push(args[i][k]);
-        }
-        values.push(key);
-        r.set(fn.apply(null, values), key);
-      });
-
-      return r.get();
-    }
+    return r.get();
   }
 
 }
+
+
+/**
+  @description  creates an iterator map
+  @param        {object} o
+  @param        {function} fn
+  @return       {iterable}
+*/
+export function* imap (o, fn) {
+
+  let iterable = iterator(o);
+  let data = iterable.next();
+  let type = o.constructor;
+
+  while (!data.done) {
+
+    let [k, v, t] = data.value;
+
+    yield [k, fn(v, k), t || type];
+    data = iterable.next();
+  }
+}
+
 
 
 
@@ -424,6 +452,11 @@ export function takeWhile (o, fn) {
   return r.get();
 }
 
+export function take (o, n = 1) {
+
+  return takeWhile(o, (v, k) => k < n);
+}
+
 
 /**
   @description  ignore while the predicate is true
@@ -446,6 +479,11 @@ export function dropWhile (o, fn) {
   return r.get();
 }
 
+
+export function drop (o, n = 1) {
+
+  return dropWhile(o, (v, k) => k < n);
+}
 
 
 /**
@@ -559,45 +597,20 @@ export function sum (o, acc) {
 
 
 /*
-  todo - map over the longest arg
-       - throw if args are not the same
+  @description  adds the value of each index from each object into an array
+  @param        {object} o
+  @param        {any} [ret]
+  @return       {number}
 */
 export function zip (...args) {
 
-  let r = returns(args[0]);
-
-  forEach(args[0], function (v, k, type) {
-
-    let values = [v];
-    let i = 0;
-    while (++i < args.length) {
-      values.push(typeof args[i].next === 'function' ? args[i].next().value[1] : args[i][k]);
-    }
-    r.set(values, k, type);
-  });
-
-  return r.get();
-}
-
-
-// let zip = map(function () {
-//   let args = toArray(arguments);
-//   args.pop();
-//   return args;
-// });
-
-function argsOfType (...args) {
-
-  let i = 0;
-  let l = args.length - 1;
-
-  while (i < l) {
-    if (args[i].constructor !== args[++i].constructor) {
-      throw new TypeError('arguments must be of same type');
-    }
+  if (args.length === 1) {
+    return args[0];
   }
 
+  return map(...args, (...v) => v);
 }
+
 
 
 export function* chain (...args) {
@@ -629,56 +642,6 @@ export function* chain (...args) {
 
 
 
-
-/**
-  @description  creates an iterator map
-  @param        {object} o
-  @param        {function} fn
-  @return       {iterable}
-*/
-export function* imap (o, fn) {
-
-  let iterable = iterator(o);
-  let data = iterable.next();
-  let type = o.constructor;
-
-  while (!data.done) {
-
-    let [k, v, t] = data.value;
-
-    yield [k, fn(v, k), t || type];
-    data = iterable.next();
-  }
-}
-
-
-/**
-  @description  creates an iterator filter
-  @param        {object} o
-  @param        {function} fn
-  @return       {iterable}
-*/
-export function* ifilter (o, fn) {
-
-
-  let iterable = iterator(o);
-  let data = iterable.next();
-  let type = o.constructor;
-
-  while (!data.done) {
-
-    let [k, v, t] = data.value;
-
-    if (fn(v, k)) {
-      yield [k, v, t || type];
-    }
-    data = iterable.next();
-  }
-}
-
-
-
-
 /**
   @description  creates a range iterable
   @param        {number} start
@@ -695,6 +658,32 @@ export function* range (start, stop, step = 1) {
     yield [i++, start];
     start = start + step;
   }
+}
+
+
+export function partition (o, fn) {
+
+  let iterable = iterator(o);
+  let data = iterable.next();
+  let s = returns(o);
+  let f = returns(o);
+
+  while (!data.done) {
+
+    let [k, v, type] = data.value;
+
+    if (fn(v, k)) {
+      s.set(v, k, type);
+    }
+    else {
+      f.set(v, k, type);
+    }
+
+    data = iterable.next();
+  }
+
+  return [s.get(), f.get()];
+
 }
 
 
