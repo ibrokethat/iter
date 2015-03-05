@@ -3,14 +3,11 @@
 /*
   todo
 
-    imap -> multiple items
-    izip
-    itakeWhile
-    idropWhile
+  itakeWhile
+  idropWhile
 
-    groupBy
-    intersection
-
+  groupBy
+  intersection
 
 */
 
@@ -673,7 +670,7 @@ export function* chain (...args) {
   @param        {number} [step]
   @return       {iterable}
 */
-export function* range (start, stop, step = 1) {
+export function* irange (start, stop, step = 1) {
 
   let i = 0;
 
@@ -709,22 +706,3 @@ export function partition (o, fn) {
   return [t.get(), f.get()];
 
 }
-
-
-// let oo = {
-//   [Symbol.iterator]: function* () {
-
-//     let i = 0;
-
-//     while (i < 11) {
-//       yield [null, i, Set];
-//       i = i +2;
-//     }
-
-//   }
-// }
-
-
-
-// forEach(imap(ifilter(oo, v => v%4 === 0), v => v * 10), (v, k) => console.log(v, k));
-// forEach(imap(range(5, 100, 5), v => map(range(0, v), v => v)), (v, k) => console.log(v, k));
