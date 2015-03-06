@@ -198,7 +198,7 @@ describe("test iter module: ", () => {
   });
 
 
-  describe.only('function forEach', () => {
+  describe('function forEach', () => {
 
     it('should iterate over the iterator returned from the Array.prototype.entries method', () => {
 
