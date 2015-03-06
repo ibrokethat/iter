@@ -1,21 +1,49 @@
-# iter
+# Iter
 
-  Iteration functionality
-  Taking the best ideas from various other libraries (pythons iter tools, ramda, etc)
+  Take the best ideas from python's itertools, ramdas currying, and all the lovely ES6 iterable protocols and what do you get?
+
+  Super Iteration...
 
 
 
 ## Install
 
-  npm install iter
+  As the latest es6 branch isn't yet in npm add the following to your package.json dependencies
+
+  ```
+  "super-iter": "git+ssh://git@github.com:ibrokethat/iter.git#es6ification"
+
+  ```
 
 
-##  What is iter?
+##  Usage
 
+  ```
+  import {ifilter, imap, sum, takeWhile} from 'super-iter';
 
+  let a1 = [1, 2, 3, 4, 5];
+  let a2 = [10, 20, 30, 40, 50];
+  let a3 = [100, 200, 300, 400, 500];
 
-##  Using iter
+  let sumAll = imap((...args) => sum(args));
+  let evens = ifilter(v => v%2 === 0);
+  let less250 = takeWhile(v => v < 250);
 
+  let v = less250(evens(sumAll(a1, a2, a3)));
+
+  console.log(v); // -> ['222']
+
+  ```
+
+## Test
+
+  ```
+  git clone git@github.com/ibrokethat/iter
+  cd iter
+  git checkout es6ification
+  npm i
+  npm test
+  ```
 
 ## License
 
