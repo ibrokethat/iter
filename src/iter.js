@@ -1,18 +1,7 @@
 "use strict";
 
-/*
-  todo
-
-  itakeWhile
-  idropWhile
-
-  groupBy
-  intersection
-
-*/
-
-
 const StopIteration = new Error();
+const Sparse = {};
 
 export const GeneratorFunctionPrototype = Object.getPrototypeOf(function*() {yield 1});
 export const GeneratorFunction = GeneratorFunctionPrototype.constructor;
@@ -47,7 +36,7 @@ function returns (o) {
 
   let cache = new WeakMap();
 
-  cache.set(Array, [[], (v) => r.push(v)]);
+  cache.set(Array, [[], (v, k) => r.push(v)]);
   cache.set(Map, [new Map(), (v, k) => r.set(k, v)]);
   cache.set(Set, [new Set(), (v) => r.add(v)]);
   cache.set(Object, [{}, (v, k) => r[k] = v]);
@@ -72,7 +61,7 @@ function curry (fn) {
 
       case 0:
 
-        throw new Error('NO_ARGS_EXCEPTION');
+        throw new Error(fn.name + ': called with no arguments');
 
       case 1:
 
@@ -87,6 +76,26 @@ function curry (fn) {
 
   };
 }
+
+
+function curry1 (fn) {
+
+  return (...args) => {
+
+    switch (args.length) {
+
+      case 0:
+
+        throw new Error(fn.name + ': called with no arguments');
+
+      default:
+
+        return fn(...args);
+    };
+
+  };
+}
+
 
 
 /**
@@ -144,8 +153,14 @@ function _forEach (o, fn) {
 
 
   try {
+    //  fastpath
+    if (typeof o !== 'function' && typeof o.length === 'number') {
 
-    if (typeof o.entries === 'function') {
+      for (let i  = 0, l = o.length; i < l; i++) {
+        fn(o[i], i);
+      }
+    }
+    else if (typeof o.entries === 'function') {
 
       for (let [k, v] of o.entries()) {
         fn(v, k);
@@ -173,6 +188,7 @@ function _forEach (o, fn) {
       while (!data.done) {
 
         let [k, v, type] = data.value;
+        k = type === Set ? v : k;
         fn(v, k, type);
         data = it.next();
       }
@@ -191,38 +207,21 @@ function _forEach (o, fn) {
 export const forEach = curry(_forEach);
 
 
-export function exhaust (o) {
-  forEach(o, () => {});
-}
-
-
-export function collect (o) {
-  return map(o, (v) => v);
-}
-
 
 /**
-  @descrption   calls a function on each item in an object and returns the item if 'true'
-  @param        {o} object
-  @param        {fn} function
+  @description  pulls all the data from an iterable object into the correct data structure
+  @param        {object} o
+  @param        {function} fn
+  @return       {iterable}
 */
-function _filter (o, fn) {
+export function collect (o, type) {
 
   let r = returns(o);
 
-  forEach(o, (v, k, type) => {
+  forEach(o, (v, k, type) => r.set(v, k, type));
 
-    if (fn(v, k)) {
-
-      r.set(v, k, type);
-    }
-  });
-
-  return r.get();
+  return r.get() || returns(type).get();
 }
-
-export const filter = curry(_filter);
-
 
 
 /**
@@ -253,35 +252,23 @@ function* _ifilter (o, fn) {
 
 export const ifilter = curry(_ifilter);
 
+
+
+
 /**
-  @descrption   calls a function on each item in an object and returns the result
+  @descrption   calls a function on each item in an object and returns the item if 'true'
   @param        {o} object
   @param        {fn} function
-  @return       {object|array}
 */
-function _map (...args) {
+function _filter (o, fn) {
 
-  if (args.length === 2) {
-
-    let [o, fn] = args;
-
-    let r = returns(o);
-
-    forEach(o, (v, k, type) => {
-      r.set(fn(v, k), k, type);
-    });
-
-    return r.get();
-  }
-  else {
-
-    return collect(imap(...args));
-  }
-
+  return collect(_ifilter(o, fn), o);
 }
 
+export const filter = curry(_filter);
 
-export const map = curry(_map);
+
+
 
 
 /**
@@ -317,7 +304,7 @@ function* _imap (...args) {
     let iterables = map(args, iterator);
     let data = invoke(iterables, 'next');
 
-    while (filter(data, (v) => v.done).length === 0) {
+    while (filter(data, v => v.done).length === 0) {
 
       let [k, , t] = data[0].value;
 
@@ -327,148 +314,97 @@ function* _imap (...args) {
 
       data = invoke(iterables, 'next');
     }
-
   }
 }
-
 
 export const imap = curry(_imap);
 
 
-export function first (o, fn) {
-
-  let r;
-  forEach(o, (v, k) => {
-    if (fn(v, k)) {
-      r = [v, k];
-      throw StopIteration;
-    }
-  });
-  return r;
-}
-
-
-export function last (o, fn) {
-
-  let r;
-  forEach(o, (v, k) => {
-    if (fn(v, k)) {
-      r = [v, k];
-    }
-  });
-
-  return r;
-}
-
-
-
 /**
-  @description  returns true if any of the items evaluate to true
-                else returns false
+  @descrption   calls a function on each item in an object and returns the result
   @param        {o} object
   @param        {fn} function
-  @param        {object} [scope]
-  @return       {boolean}
+  @return       {object|array}
 */
-export function some (o, fn) {
+function _map (...args) {
 
-  return !! first(o, fn);
+  if (args.length === 2) {
+
+    let [o, fn] = args;
+
+    if (typeof o !== 'function' && typeof o.length === 'number') {
+
+      let r = Array(o.length);
+      _forEach(o, (v, k) => r[k] = fn(v, k));
+      return r;
+    }
+  }
+
+  return collect(_imap(...args), args[0]);
+}
+
+
+export const map = curry(_map);
+
+
+
+
+/*
+  @description  adds the value of each index from each object into an array
+  @param        {object} o
+  @param        {any} [ret]
+  @return       {number}
+*/
+export function izip (...args) {
+
+  if (args.length === 1) {
+    return args[0];
+  }
+
+  return _imap(...args, (...v) => v);
+}
+
+
+/*
+  @description  adds the value of each index from each object into an array
+  @param        {object} o
+  @param        {any} [ret]
+  @return       {number}
+*/
+export function zip (...args) {
+
+  return collect(izip(...args), args[0]);
 }
 
 
 
-/**
-  @description  returns true if all of the items evaluate to true
-                else returns false
-  @param        {o} object
-  @param        {fn} function
-  @param        {object} [scope]
-  @return       {boolean}
-*/
-export function every (o, fn) {
-
-  return !(!! first(o, negate.bind(null, fn)));
-}
-
-
 
 /**
-  @description  returns the index of the first match
+  @description  take while the predicate is true
   @param        {o} object
-  @param        {any} val
+  @param        {fn} funtion
   @return       {int|string}
 */
-export function indexOf (o, el) {
+function* _itakeWhile (o, fn) {
 
-  let r = first(o, eq.bind(null, el));
-  return r ? r[1] : -1;
+  let iterable = iterator(o);
+  let data = iterable.next();
+
+  while (!data.done) {
+
+    let [k, v, type] = data.value;
+    if (fn(v, k)) {
+      yield [k, v, type];
+    }
+    else {
+      break;
+    }
+
+    data = iterable.next();
+  }
 }
 
-
-
-/**
-  @description  returns the index|key of the first item to match the predicate function
-  @param        {o} object
-  @param        {any} val
-  @return       {int|string}
-*/
-export function findIndex (o, fn) {
-
-  let r = first(o, fn);
-  return r ? r[1] : -1;
-}
-
-
-/**
-  @description  returns the value of the first item to match the predicate function
-  @param        {o} object
-  @param        {any} val
-  @return       {int|string}
-*/
-export function find (o, fn) {
-
-  let r = first(o, fn);
-  return r ? r[0] : undefined;
-}
-
-
-/**
-  @description  returns the index of the last match
-  @param        {o} object
-  @param        {any} val
-  @return       {int|string}
-*/
-export function lastIndexOf (o, el) {
-
-  let r = last(o, eq.bind(null, el));
-  return r ? r[1] : -1;
-}
-
-/**
-  @description  returns the index|key of the first item to match the predicate function
-  @param        {o} object
-  @param        {any} val
-  @return       {int|string}
-*/
-export function findLastIndex (o, fn) {
-
-  let r = last(o, fn);
-  return r ? r[1] : -1;
-}
-
-
-
-/**
-  @description  returns the value of the first item to match the predicate function
-  @param        {o} object
-  @param        {any} val
-  @return       {int|string}
-*/
-export function findLast (o, fn) {
-
-  let r = last(o, fn);
-  return r ? r[0] : undefined;
-}
+export const itakeWhile = curry(_itakeWhile);
 
 
 /**
@@ -479,24 +415,69 @@ export function findLast (o, fn) {
 */
 function _takeWhile (o, fn) {
 
-  let r = returns(o);
-  forEach(o, (v, k, type) => {
-    if (fn(v, k)) {
-      r.set(v, k, type);
-    }
-    else {
-      throw StopIteration;
-    }
-  });
-  return r.get();
+  return collect(_itakeWhile(o, fn), o);
 }
 
 export const takeWhile = curry(_takeWhile);
 
-export function take (o, n = 1) {
 
-  return takeWhile(o, (v, k) => k < n);
+
+
+
+
+/**
+  @description  take while the predicate is true
+  @param        {o} object
+  @param        {fn} funtion
+  @return       {int|string}
+*/
+function _itake (o, n = 1) {
+
+  return _itakeWhile(o, (v, k) => k < n);
 }
+
+export const itake = curry1(_itake);
+
+
+function _take (o, n = 1) {
+
+  return collect(_itake(o, n), o);
+}
+
+export const take = curry1(_take);
+
+
+
+
+
+
+/**
+  @description  drop while the predicate is true
+  @param        {o} object
+  @param        {fn} funtion
+  @return       {int|string}
+*/
+function* _idropWhile (o, fn) {
+
+  let iterable = iterator(o);
+  let take = false;
+  let data = iterable.next();
+
+  while (!data.done) {
+
+    let [k, v, type] = data.value;
+    take = take || !fn(v, k);
+
+    if (take) {
+      yield [k, v, type];
+    }
+
+    data = iterable.next();
+  }
+}
+
+export const idropWhile = curry(_idropWhile);
+
 
 
 /**
@@ -505,63 +486,119 @@ export function take (o, n = 1) {
   @param        {fn} function
   @return       {int|string}
 */
-export function dropWhile (o, fn) {
+function _dropWhile (o, fn) {
 
-  let r = returns(o);
-  let take = false;
-  forEach(o, (v, k, type) => {
-
-    take = take || !fn(v, k);
-
-    if (take) {
-      r.set(v, k, type);
-    }
-  });
-  return r.get();
+  return collect(_idropWhile(o, fn), o);
 }
 
+export const dropWhile = curry(_dropWhile);
 
-export function drop (o, n = 1) {
 
-  return dropWhile(o, (v, k) => k < n);
+
+function _idrop (o, n = 1) {
+
+  return _idropWhile(o, (v, k) => k < n);
 }
 
+export const idrop = curry1(_idrop);
 
-/**
-  @description  reduces the value of the object down to a single value
-  @param        {any} acc
-  @param        {object} o
-  @param        {function} fn
-  @return       {any}
-*/
-export function reduce (o, fn, acc){
 
-  let noAcc = typeof acc === 'undefined';
-  let iterable;
 
-  if (noAcc) {
+function _drop (o, n = 1) {
 
-    iterable = iterator(o);
-    let data = iterable.next();
+  return collect(_idrop(o, n), o);
+}
 
-    if (data.done) {
-      throw new TypeError("reduce() of sequence with no initial value");
+export const drop = curry1(_drop);
+
+
+
+export function _groupBy (o, fn) {
+
+  let type = o.constructor;
+
+  let iterable = iterator(o);
+  let data = iterable.next();
+
+  let [k, v, t] = data.value;
+
+  let key = fn(v, k);
+  let r = typeof key === 'number' ? [] :
+          typeof key === 'string' ? {} : new Map();
+
+
+  while (!data.done) {
+
+    let [k, v, t] = data.value;
+    let key = fn(v, k);
+
+    if (r.constructor === Map) {
+
+      if (!r.has(key)) {
+
+        r.set(key, returns(o));
+      }
+      r.get(key).set(v, k, t || type);
+
     }
     else {
-      acc = data.value[1];
+
+      if (!r[key]) {
+
+        r[key] = returns(o);
+      }
+      r[key].set(v, k, t || type);
+
     }
 
-  }
-  else {
-    iterable = o;
+    data = iterable.next();
   }
 
-  forEach(iterable, (value, key) => {
-    acc = fn(acc, value, key);
-  });
-
-  return acc;
+  return map(r, (v) => v ? v.get() : null);
 }
+
+export const groupBy = curry(_groupBy);
+
+
+
+export function _indexBy (o, fn) {
+
+  return _map(_igroupBy(o, fn), (v, k, type) => v);
+}
+
+export const indexBy = curry(_indexBy);
+
+
+
+
+function _part (o, fn) {
+
+  let iterable = iterator(o);
+  let data = iterable.next();
+  let t = returns(o);
+  let f = returns(o);
+
+  while (!data.done) {
+
+    let [k, v, type] = data.value;
+
+    if (fn(v, k)) {
+      t.set(v, k, type);
+    }
+    else {
+      f.set(v, k, type);
+    }
+
+    data = iterable.next();
+  }
+
+  return [t.get(), f.get()];
+
+}
+
+export const part = curry(_part);
+
+
 
 
 
@@ -625,6 +662,216 @@ export function pluck(items, key, only_existing) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+function _first (o, fn) {
+
+  let r;
+  forEach(o, (v, k) => {
+    if (fn(v, k)) {
+      r = [v, k];
+      throw StopIteration;
+    }
+  });
+  return r;
+}
+
+export const first = curry(_first);
+
+
+
+function _last (o, fn) {
+
+  let r;
+  forEach(o, (v, k) => {
+    if (fn(v, k)) {
+      r = [v, k];
+    }
+  });
+
+  return r;
+}
+
+export const last = curry(_last);
+
+
+/**
+  @description  returns true if any of the items evaluate to true
+                else returns false
+  @param        {o} object
+  @param        {fn} function
+  @param        {object} [scope]
+  @return       {boolean}
+*/
+function _some (o, fn) {
+
+  return !! first(o, fn);
+}
+
+export const some = curry(_some);
+
+
+
+/**
+  @description  returns true if all of the items evaluate to true
+                else returns false
+  @param        {o} object
+  @param        {fn} function
+  @param        {object} [scope]
+  @return       {boolean}
+*/
+function _every (o, fn) {
+
+  return !(!! first(o, negate.bind(null, fn)));
+}
+
+export const every = curry(_every);
+
+
+
+/**
+  @description  returns the index of the first match
+  @param        {o} object
+  @param        {any} val
+  @return       {int|string}
+*/
+function _indexOf (o, el) {
+
+  let r = first(o, eq.bind(null, el));
+  return r ? r[1] : -1;
+}
+
+export const indexOf = curry(_indexOf);
+
+
+
+/**
+  @description  returns the index|key of the first item to match the predicate function
+  @param        {o} object
+  @param        {any} val
+  @return       {int|string}
+*/
+function _findIndex (o, fn) {
+
+  let r = first(o, fn);
+  return r ? r[1] : -1;
+}
+
+export const findIndex = curry(_findIndex);
+
+
+
+/**
+  @description  returns the value of the first item to match the predicate function
+  @param        {o} object
+  @param        {any} val
+  @return       {int|string}
+*/
+function _find (o, fn) {
+
+  let r = first(o, fn);
+  return r ? r[0] : undefined;
+}
+
+export const find = curry(_find);
+
+
+
+/**
+  @description  returns the index of the last match
+  @param        {o} object
+  @param        {any} val
+  @return       {int|string}
+*/
+function _lastIndexOf (o, el) {
+
+  let r = last(o, eq.bind(null, el));
+  return r ? r[1] : -1;
+}
+
+export const lastIndexOf = curry(_lastIndexOf);
+
+
+
+/**
+  @description  returns the index|key of the last item to match the predicate function
+  @param        {o} object
+  @param        {any} val
+  @return       {int|string}
+*/
+function _findLastIndex (o, fn) {
+
+  let r = last(o, fn);
+  return r ? r[1] : -1;
+}
+
+export const findLastIndex = curry(_findLastIndex);
+
+
+
+/**
+  @description  returns the value of the first last to match the predicate function
+  @param        {o} object
+  @param        {any} val
+  @return       {int|string}
+*/
+function _findLast (o, fn) {
+
+  let r = last(o, fn);
+  return r ? r[0] : undefined;
+}
+
+export const findLast = curry(_findLast);
+
+
+
+/**
+  @description  reduces the value of the object down to a single value
+  @param        {any} acc
+  @param        {object} o
+  @param        {function} fn
+  @return       {any}
+*/
+export function reduce (o, fn, acc){
+
+  let noAcc = typeof acc === 'undefined';
+  let iterable;
+
+  if (noAcc) {
+
+    iterable = iterator(o);
+    let data = iterable.next();
+
+    if (data.done) {
+      throw new TypeError("reduce() of sequence with no initial value");
+    }
+    else {
+      acc = data.value[1];
+    }
+
+  }
+  else {
+    iterable = o;
+  }
+
+  forEach(iterable, (value, key) => {
+    acc = fn(acc, value, key);
+  });
+
+  return acc;
+}
+
+
+
+
 /**
   @description  adds the values of the object
   @param        {object} o
@@ -633,39 +880,6 @@ export function pluck(items, key, only_existing) {
 */
 export function sum (o, acc) {
   return reduce(o, (acc, a) => acc + a, acc);
-}
-
-
-
-/*
-  @description  adds the value of each index from each object into an array
-  @param        {object} o
-  @param        {any} [ret]
-  @return       {number}
-*/
-export function zip (...args) {
-
-  if (args.length === 1) {
-    return args[0];
-  }
-
-  return map(...args, (...v) => v);
-}
-
-
-/*
-  @description  adds the value of each index from each object into an array
-  @param        {object} o
-  @param        {any} [ret]
-  @return       {number}
-*/
-export function izip (...args) {
-
-  if (args.length === 1) {
-    return args[0];
-  }
-
-  return imap(...args, (...v) => v);
 }
 
 
@@ -717,28 +931,3 @@ export function* irange (start, stop, step = 1) {
   }
 }
 
-
-export function partition (o, fn) {
-
-  let iterable = iterator(o);
-  let data = iterable.next();
-  let t = returns(o);
-  let f = returns(o);
-
-  while (!data.done) {
-
-    let [k, v, type] = data.value;
-
-    if (fn(v, k)) {
-      t.set(v, k, type);
-    }
-    else {
-      f.set(v, k, type);
-    }
-
-    data = iterable.next();
-  }
-
-  return [t.get(), f.get()];
-
-}

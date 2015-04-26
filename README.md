@@ -1,6 +1,6 @@
 # Iter
 
-  Take the best ideas from python's itertools, ramdas currying, and all the lovely ES6 iterable protocols and what do you get?
+  Take the best ideas from python's itertools, mochikit iter, ramdas currying, and all the lovely ES6 iterable protocols and what do you get?
 
   Super Iteration...
 
@@ -31,7 +31,7 @@
 
   let v = less250(evens(sumAll(a1, a2, a3)));
 
-  console.log(v); // -> ['222']
+  console.log(v); // -> [222]
 
   ```
 
@@ -44,6 +44,21 @@
   npm i
   npm test
   ```
+
+## Todo
+
+
+  - Move build and test commands into .bin as they are getting too verbose to fit package.json nicely.
+  - Have the tests trigger the builds
+  - Add githooks to trigger tests pre commit
+
+
+  - groupBy
+  - indexBy
+  - intersection
+  - union
+
+
 
 ## License
 

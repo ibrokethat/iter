@@ -6,6 +6,9 @@ import * as underTest from '../src/iter';
 
 import {expect} from 'chai';
 
+import _ from 'underscore';
+import lodash from 'lodash';
+
 let arr;
 let set;
 let map;
@@ -1598,15 +1601,15 @@ describe("test iter module: ", () => {
 
     // it('should throw on an object', () => {
 
-    //   let results = underTest.takeWhile(obj, v => v < 40);
+    //   let results = underTest.dropWhile(obj, v => v < 40);
 
     //   expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30});
 
-    //   results = underTest.takeWhile(obj, v => v < 100);
+    //   results = underTest.dropWhile(obj, v => v < 100);
 
     //   expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30, forty: 40, fifty: 50});
 
-    //   results = underTest.takeWhile(obj, v => v < 10);
+    //   results = underTest.dropWhile(obj, v => v < 10);
 
     //   expect(results).to.deep.equal({});
 
@@ -1644,15 +1647,15 @@ describe("test iter module: ", () => {
 
     // it('should throw on an object', () => {
 
-    //   let results = underTest.takeWhile(obj, v => v < 40);
+    //   let results = underTest.dropWhile(obj, v => v < 40);
 
     //   expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30});
 
-    //   results = underTest.takeWhile(obj, v => v < 100);
+    //   results = underTest.dropWhile(obj, v => v < 100);
 
     //   expect(results).to.deep.equal({ten: 10, twenty: 20, thirty: 30, forty: 40, fifty: 50});
 
-    //   results = underTest.takeWhile(obj, v => v < 10);
+    //   results = underTest.dropWhile(obj, v => v < 10);
 
     //   expect(results).to.deep.equal({});
 
@@ -1675,20 +1678,20 @@ describe("test iter module: ", () => {
 
 
 
-  describe('function partition', () => {
+  describe('function part', () => {
 
-    it('should partition an array', () => {
+    it('should part an array', () => {
 
-      let [t, f] = underTest.partition(arr, v => v > 20);
+      let [t, f] = underTest.part(arr, v => v > 20);
 
       expect(t).to.deep.equal([30, 40, 50]);
       expect(f).to.deep.equal([10, 20]);
 
     });
 
-    it('should partition an object', () => {
+    it('should part an object', () => {
 
-      let [t, f] = underTest.partition(obj, v => v > 20);
+      let [t, f] = underTest.part(obj, v => v > 20);
 
       expect(t).to.deep.equal({thirty: 30, forty: 40, fifty: 50});
       expect(f).to.deep.equal({ten:10, twenty: 20});
@@ -1697,5 +1700,179 @@ describe("test iter module: ", () => {
 
   });
 
+
+
+  describe('function groupBy', () => {
+
+    it('should group the items of an array into groups in an array', () => {
+
+      let results = underTest.groupBy([30,10,20,40,50], v => {
+        let key;
+        switch (true) {
+          case v < 30:
+            key = 0;
+            break;
+          case v === 30:
+            key = 1;
+            break;
+          case v > 30:
+            key = 2;
+            break;
+        }
+        return key;
+      });
+
+      expect(results).to.deep.equal([
+        [10, 20],
+        [30],
+        [40, 50]
+      ]);
+
+    });
+
+    it('should group the items of an array into groups in an Object', () => {
+
+      let results = underTest.groupBy(arr, v => {
+        let key;
+        switch (true) {
+          case v < 30:
+            key = '<';
+            break;
+          case v === 30:
+            key = '===';
+            break;
+          case v > 30:
+            key = '>';
+            break;
+        }
+        return key;
+      });
+
+      expect(results).to.deep.equal({
+        '<': [10, 20],
+        '===': [30],
+        '>': [40, 50]
+      });
+
+    });
+
+
+    it('should group the items of an array into groups in a Map', () => {
+
+      let keys = [['<'], ['==='], ['>']];
+
+      let results = underTest.groupBy(arr, v => {
+
+        let key;
+
+        switch (true) {
+          case v < 30:
+            key = keys[0];
+            break;
+          case v === 30:
+            key = keys[1];
+            break;
+          case v > 30:
+            key = keys[2];
+            break;
+        }
+        return key;
+      });
+
+      expect(results.constructor).to.be.equal(Map);
+      expect(results.size).to.be.equal(3);
+      expect(results.get(keys[0])).to.be.deep.equal([10, 20]);
+      expect(results.get(keys[1])).to.be.deep.equal([30]);
+      expect(results.get(keys[2])).to.be.deep.equal([40, 50]);
+
+    });
+
+
+    it('should group the items of an object into groups in an array', () => {
+
+      let results = underTest.groupBy(obj, v => {
+        let key;
+        switch (true) {
+          case v < 30:
+            key = 0;
+            break;
+          case v === 30:
+            key = 1;
+            break;
+          case v > 30:
+            key = 2;
+            break;
+        }
+        return key;
+      });
+
+      expect(results).to.deep.equal([
+        {ten: 10, twenty: 20},
+        {thirty: 30},
+        {forty: 40, fifty: 50}
+      ]);
+
+    });
+
+
+    it('should group the items of an object into groups in an object', () => {
+
+      let results = underTest.groupBy(obj, v => {
+        let key;
+        switch (true) {
+          case v < 30:
+            key = '<';
+            break;
+          case v === 30:
+            key = '===';
+            break;
+          case v > 30:
+            key = '>';
+            break;
+        }
+        return key;
+      });
+
+
+      expect(results).to.deep.equal({
+        '<': {ten: 10, twenty: 20},
+        '===': {thirty: 30},
+        '>': {forty: 40, fifty: 50}
+      });
+
+    });
+
+
+    it('should group the items of an object into groups in a Map', () => {
+
+      let keys = [['<'], ['==='], ['>']];
+
+      let results = underTest.groupBy(obj, v => {
+
+        let key;
+
+        switch (true) {
+          case v < 30:
+            key = keys[0];
+            break;
+          case v === 30:
+            key = keys[1];
+            break;
+          case v > 30:
+            key = keys[2];
+            break;
+        }
+        return key;
+      });
+
+      expect(results.constructor).to.be.equal(Map);
+      expect(results.size).to.be.equal(3);
+      expect(results.get(keys[0])).to.be.deep.equal({ten: 10, twenty: 20});
+      expect(results.get(keys[1])).to.be.deep.equal({thirty: 30});
+      expect(results.get(keys[2])).to.be.deep.equal({forty: 40, fifty: 50});
+
+    });
+
+  });
 
 });

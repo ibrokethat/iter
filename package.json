@@ -31,8 +31,7 @@
   "scripts": {
     "prepublish": "npm prune",
     "build":"./node_modules/.bin/babel --blacklist regenerator,es6.forOf src --out-dir lib" ,
-    "test": "./node_modules/.bin/mocha --compilers js:./test/babel --blacklist regenerator,es6.forOf --harmony --colors --recursive -R spec --ui bdd ./test/**/*.test.js --NODE_ENV=test",
-    "t": "--loose all "
+    "test": "./node_modules/.bin/mocha --compilers js:./test/babel --blacklist regenerator,es6.forOf --harmony --colors --recursive -R spec --ui bdd ./test/**/*.test.js --NODE_ENV=test"
   },
   "engines": {
     "node": "0.12.x"
