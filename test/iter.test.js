@@ -6,9 +6,6 @@ import * as underTest from '../src/iter';
 
 import {expect} from 'chai';
 
-import _ from 'underscore';
-import lodash from 'lodash';
-
 let arr;
 let set;
 let map;

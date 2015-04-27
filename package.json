@@ -21,7 +21,9 @@
   },
   "keywords": [
     "ibrokethat",
-    "iteration"
+    "iteration",
+    "es6",
+    "generators"
   ],
   "repository": {
     "type": "git",

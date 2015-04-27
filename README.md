@@ -51,12 +51,7 @@
   - Move build and test commands into .bin as they are getting too verbose to fit package.json nicely.
   - Have the tests trigger the builds
   - Add githooks to trigger tests pre commit
-
-
-  - groupBy
-  - indexBy
-  - intersection
-  - union
+  - build for browserify
 
 
 
